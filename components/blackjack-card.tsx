@@ -1,7 +1,11 @@
-export interface BlackjackCardProps {
+export interface BlackjackCardType {
   value: string;
   suite: string;
   faceDown: boolean;
+}
+
+export interface CutCardType {
+  type: "cut";
 }
 
 const suiteIconMap: Record<string, string> = {
@@ -11,7 +15,7 @@ const suiteIconMap: Record<string, string> = {
   spades: "♠",
 };
 
-export function BlackjackCard({ value, suite, faceDown }: BlackjackCardProps) {
+export function BlackjackCard({ value, suite, faceDown }: BlackjackCardType) {
   const suiteIcon = suiteIconMap[suite.toLowerCase()] || suite;
 
   if (faceDown) {

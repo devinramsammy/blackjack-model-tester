@@ -1,11 +1,11 @@
 "use client";
 
-import { BlackjackCard } from "./blackjack-card";
+import { BlackjackCard, BlackjackCardType } from "./blackjack-card";
 import { motion, AnimatePresence } from "motion/react";
 
 interface BlackjackTableProps {
-  dealerCards?: Array<{ value: string; suite: string; faceDown: boolean }>;
-  playerCards?: Array<{ value: string; suite: string; faceDown: boolean }>;
+  dealerCards?: BlackjackCardType[];
+  playerCards?: BlackjackCardType[];
 }
 
 export function BlackjackTable({

@@ -1,44 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { BlackjackTable } from "@/components/blackjack-table";
-import { CARD_VALUES, CARD_SUITES } from "@/lib/constants";
-import { BlackjackCardProps } from "@/components/blackjack-card";
+import { useDeckStore } from "@/lib/use-deck-store";
 
 export default function Home() {
-  const [dealerCards, setDealerCards] = useState<BlackjackCardProps[]>([]);
-  const [playerCards, setPlayerCards] = useState<BlackjackCardProps[]>([]);
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+  const {
+    playerCards,
+    dealerCards,
+    isPlayerTurn,
+    getCard,
+    initializeDeck,
+    addCardToPlayer,
+    addCardToDealer,
+    clearCards,
+    setIsPlayerTurn,
+    initializeHands,
+  } = useDeckStore();
 
-  const getRandomCard = (faceDown = false) => ({
-    value: CARD_VALUES[Math.floor(Math.random() * CARD_VALUES.length)],
-    suite: CARD_SUITES[Math.floor(Math.random() * CARD_SUITES.length)],
-    faceDown,
-  });
+  useEffect(() => {
+    initializeDeck(1);
+  }, [initializeDeck]);
 
   const handleAddCard = () => {
-    const newCard = getRandomCard(!isPlayerTurn);
+    const card = getCard();
+    if (!card) return;
+
+    const cardWithFaceDown = { ...card, faceDown: !isPlayerTurn };
+
     if (isPlayerTurn) {
-      setPlayerCards((prev) => [...prev, newCard]);
+      addCardToPlayer(cardWithFaceDown);
     } else {
-      setDealerCards((prev) => [...prev, newCard]);
+      addCardToDealer(cardWithFaceDown);
     }
     setIsPlayerTurn(!isPlayerTurn);
   };
 
   const handleClearTable = () => {
-    setDealerCards([]);
-    setPlayerCards([]);
-    setIsPlayerTurn(true);
+    clearCards();
+    initializeDeck(1);
 
     setTimeout(() => {
-      const playerCard1 = getRandomCard(false);
-      const playerCard2 = getRandomCard(false);
-      const dealerCard1 = getRandomCard(true);
-      const dealerCard2 = getRandomCard(true);
-
-      setPlayerCards([playerCard1, playerCard2]);
-      setDealerCards([dealerCard1, dealerCard2]);
+      initializeHands();
     }, 250);
   };
 
