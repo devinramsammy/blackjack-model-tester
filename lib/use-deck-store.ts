@@ -6,21 +6,19 @@ interface DeckStore {
   deck: DeckCard[];
   playerCards: BlackjackCardType[];
   dealerCards: BlackjackCardType[];
-  isPlayerTurn: boolean;
   initializeDeck: (deckCount?: number) => void;
   getCard: () => BlackjackCardType | null;
-  addCardToPlayer: (card: BlackjackCardType) => void;
-  addCardToDealer: (card: BlackjackCardType) => void;
+  addCardToPlayer: () => void;
+  addCardToDealer: () => void;
   clearCards: () => void;
-  setIsPlayerTurn: (isPlayerTurn: boolean) => void;
   initializeHands: () => void;
+  flipDealerCard: (index: number) => void;
 }
 
 export const useDeckStore = create<DeckStore>((set, get) => ({
   deck: [],
   playerCards: [],
   dealerCards: [],
-  isPlayerTurn: true,
 
   initializeDeck: (deckCount = 1) => {
     const newDeck = createDeck(deckCount);
@@ -54,15 +52,21 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     return card;
   },
 
-  addCardToPlayer: (card: BlackjackCardType) => {
+  addCardToPlayer: () => {
+    const { getCard } = get();
+    const card = getCard();
+    if (!card) return;
     set((state) => ({
-      playerCards: [...state.playerCards, card],
+      playerCards: [...state.playerCards, { ...card, faceDown: false }],
     }));
   },
 
-  addCardToDealer: (card: BlackjackCardType) => {
+  addCardToDealer: () => {
+    const { getCard } = get();
+    const card = getCard();
+    if (!card) return;
     set((state) => ({
-      dealerCards: [...state.dealerCards, card],
+      dealerCards: [...state.dealerCards, { ...card, faceDown: false }],
     }));
   },
 
@@ -70,12 +74,7 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     set({
       playerCards: [],
       dealerCards: [],
-      isPlayerTurn: true,
     });
-  },
-
-  setIsPlayerTurn: (isPlayerTurn: boolean) => {
-    set({ isPlayerTurn });
   },
 
   initializeHands: () => {
@@ -98,5 +97,13 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
         ],
       });
     }
+  },
+
+  flipDealerCard: (index: number) => {
+    set((state) => ({
+      dealerCards: state.dealerCards.map((card, i) =>
+        i === index ? { ...card, faceDown: !card.faceDown } : card
+      ),
+    }));
   },
 }));
