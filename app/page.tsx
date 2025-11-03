@@ -21,7 +21,7 @@ export default function Home() {
   }, [initializeDeck]);
 
   const handleAddCardToPlayer = () => {
-    addCardToPlayer();
+    addCardToPlayer(0);
   };
 
   const handleAddCardToDealer = () => {

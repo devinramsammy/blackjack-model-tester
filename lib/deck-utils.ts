@@ -36,3 +36,7 @@ export function createDeck(deckCount: number): DeckCard[] {
 
   return cards;
 }
+
+export function canSplitHand(hand: BlackjackCardType[]): boolean {
+  return hand.length === 2 && hand[0].value === hand[1].value;
+}

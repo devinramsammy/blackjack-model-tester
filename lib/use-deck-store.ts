@@ -1,23 +1,24 @@
 import { create } from "zustand";
-import { createDeck, DeckCard } from "./deck-utils";
+import { createDeck, DeckCard, canSplitHand } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
 
 interface DeckStore {
   deck: DeckCard[];
-  playerCards: BlackjackCardType[];
+  playerCards: BlackjackCardType[][];
   dealerCards: BlackjackCardType[];
   initializeDeck: (deckCount?: number) => void;
   getCard: () => BlackjackCardType | null;
-  addCardToPlayer: () => void;
+  addCardToPlayer: (handIndex: number) => void;
   addCardToDealer: () => void;
   clearCards: () => void;
   initializeHands: () => void;
   flipDealerCard: (index: number) => void;
+  splitHand: (handIndex: number) => void;
 }
 
 export const useDeckStore = create<DeckStore>((set, get) => ({
   deck: [],
-  playerCards: [],
+  playerCards: [[]],
   dealerCards: [],
 
   initializeDeck: (deckCount = 1) => {
@@ -52,13 +53,18 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     return card;
   },
 
-  addCardToPlayer: () => {
+  addCardToPlayer: (handIndex: number) => {
     const { getCard } = get();
     const card = getCard();
     if (!card) return;
-    set((state) => ({
-      playerCards: [...state.playerCards, { ...card, faceDown: false }],
-    }));
+    set((state) => {
+      const currentHands = [...state.playerCards];
+      currentHands[handIndex] = [
+        ...currentHands[handIndex],
+        { ...card, faceDown: false },
+      ];
+      return { playerCards: currentHands };
+    });
   },
 
   addCardToDealer: () => {
@@ -72,7 +78,7 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
 
   clearCards: () => {
     set({
-      playerCards: [],
+      playerCards: [[]],
       dealerCards: [],
     });
   },
@@ -88,8 +94,10 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     if (playerCard1 && playerCard2 && dealerCard1 && dealerCard2) {
       set({
         playerCards: [
-          { ...playerCard1, faceDown: false },
-          { ...playerCard2, faceDown: false },
+          [
+            { ...playerCard1, faceDown: false },
+            { ...playerCard2, faceDown: false },
+          ],
         ],
         dealerCards: [
           { ...dealerCard1, faceDown: true },
@@ -105,5 +113,26 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
         i === index ? { ...card, faceDown: !card.faceDown } : card
       ),
     }));
+  },
+
+  splitHand: (handIndex: number) => {
+    const { playerCards } = get();
+    const hand = playerCards[handIndex];
+
+    if (!hand || !canSplitHand(hand)) {
+      return;
+    }
+
+    const secondCard = hand[1];
+    const newHand: BlackjackCardType[] = [{ ...secondCard, faceDown: false }];
+
+    const originalHand: BlackjackCardType[] = [{ ...hand[0], faceDown: false }];
+
+    set((state) => {
+      const newPlayerCards = [...state.playerCards];
+      newPlayerCards[handIndex] = originalHand;
+      newPlayerCards.splice(handIndex + 1, 0, newHand);
+      return { playerCards: newPlayerCards };
+    });
   },
 }));
