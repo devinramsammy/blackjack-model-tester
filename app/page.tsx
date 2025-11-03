@@ -3,23 +3,21 @@
 import { useState } from "react";
 import { BlackjackTable } from "@/components/blackjack-table";
 import { CARD_VALUES, CARD_SUITES } from "@/lib/constants";
+import { BlackjackCardProps } from "@/components/blackjack-card";
 
 export default function Home() {
-  const [dealerCards, setDealerCards] = useState<
-    Array<{ value: string; suite: string }>
-  >([]);
-  const [playerCards, setPlayerCards] = useState<
-    Array<{ value: string; suite: string }>
-  >([]);
+  const [dealerCards, setDealerCards] = useState<BlackjackCardProps[]>([]);
+  const [playerCards, setPlayerCards] = useState<BlackjackCardProps[]>([]);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
 
-  const getRandomCard = () => ({
+  const getRandomCard = (faceDown = false) => ({
     value: CARD_VALUES[Math.floor(Math.random() * CARD_VALUES.length)],
     suite: CARD_SUITES[Math.floor(Math.random() * CARD_SUITES.length)],
+    faceDown,
   });
 
   const handleAddCard = () => {
-    const newCard = getRandomCard();
+    const newCard = getRandomCard(!isPlayerTurn);
     if (isPlayerTurn) {
       setPlayerCards((prev) => [...prev, newCard]);
     } else {
@@ -32,6 +30,16 @@ export default function Home() {
     setDealerCards([]);
     setPlayerCards([]);
     setIsPlayerTurn(true);
+
+    setTimeout(() => {
+      const playerCard1 = getRandomCard(false);
+      const playerCard2 = getRandomCard(false);
+      const dealerCard1 = getRandomCard(true);
+      const dealerCard2 = getRandomCard(true);
+
+      setPlayerCards([playerCard1, playerCard2]);
+      setDealerCards([dealerCard1, dealerCard2]);
+    }, 250);
   };
 
   return (

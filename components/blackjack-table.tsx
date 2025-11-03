@@ -4,8 +4,8 @@ import { BlackjackCard } from "./blackjack-card";
 import { motion, AnimatePresence } from "motion/react";
 
 interface BlackjackTableProps {
-  dealerCards?: Array<{ value: string; suite: string }>;
-  playerCards?: Array<{ value: string; suite: string }>;
+  dealerCards?: Array<{ value: string; suite: string; faceDown: boolean }>;
+  playerCards?: Array<{ value: string; suite: string; faceDown: boolean }>;
 }
 
 export function BlackjackTable({
@@ -37,7 +37,11 @@ export function BlackjackTable({
                   }}
                   layout
                 >
-                  <BlackjackCard value={card.value} suite={card.suite} />
+                  <BlackjackCard
+                    value={card.value}
+                    suite={card.suite}
+                    faceDown={card.faceDown}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -68,7 +72,11 @@ export function BlackjackTable({
                   }}
                   layout
                 >
-                  <BlackjackCard value={card.value} suite={card.suite} />
+                  <BlackjackCard
+                    value={card.value}
+                    suite={card.suite}
+                    faceDown={card.faceDown}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
