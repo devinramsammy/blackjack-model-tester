@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { canSplitHand, createDeck } from "./deck-utils";
+import { canSplitHand, createDeck, calculateHandValue } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
-import { CARD_VALUES, CARD_SUITES } from "./constants";
 
 describe("canSplitHand", () => {
   it("should return true when hand has exactly 2 cards with the same value", () => {
@@ -113,5 +112,126 @@ describe("createDeck", () => {
       expect(cutCardIndex).toBeGreaterThanOrEqual(back25PercentStart);
       expect(cutCardIndex).toBeLessThanOrEqual(back25PercentEnd);
     }
+  });
+});
+
+describe("calculateHandValue", () => {
+  it("should handle single ace with low cards - ace as 11", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "5", suite: "spades", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(16);
+  });
+
+  it("should handle single ace with high cards - ace as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(21);
+  });
+
+  it("should handle two aces - one as 11, one as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(12);
+  });
+
+  it("should handle two aces with low card - one as 11 and one as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "3", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(15);
+  });
+
+  it("should handle two aces with mid card - one as 11 and one as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "9", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(21);
+  });
+
+  it("should handle three aces - only one as 11", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "A", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(13);
+  });
+
+  it("should handle three aces with low card", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "A", suite: "diamonds", faceDown: false },
+      { value: "2", suite: "clubs", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(15);
+  });
+
+  it("should handle four aces - all as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "A", suite: "diamonds", faceDown: false },
+      { value: "A", suite: "clubs", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(14);
+  });
+
+  it("should handle ace with multiple face cards - ace as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "K", suite: "spades", faceDown: false },
+      { value: "Q", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(21);
+  });
+
+  it("should handle ace in middle of hand - ace as 11", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "3", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "7", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(21);
+  });
+
+  it("should handle ace at end of hand - ace as 1", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "9", suite: "hearts", faceDown: false },
+      { value: "10", suite: "spades", faceDown: false },
+      { value: "A", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(20);
+  });
+
+  it("should handle two aces with face card", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "A", suite: "spades", faceDown: false },
+      { value: "J", suite: "diamonds", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(12);
+  });
+
+  it("should return 0 for empty hand", () => {
+    const hand: BlackjackCardType[] = [];
+    expect(calculateHandValue(hand)).toBe(0);
+  });
+
+  it("should handle single card that is an ace", () => {
+    const hand: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+    ];
+    expect(calculateHandValue(hand)).toBe(11);
   });
 });

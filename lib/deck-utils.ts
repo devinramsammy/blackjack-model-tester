@@ -40,3 +40,30 @@ export function createDeck(deckCount: number): DeckCard[] {
 export function canSplitHand(hand: BlackjackCardType[]): boolean {
   return hand.length === 2 && hand[0].value === hand[1].value;
 }
+
+export function calculateHandValue(hand: BlackjackCardType[]): number {
+  let value = 0;
+  let aces = 0;
+
+  for (const card of hand) {
+    if (card.value === "A") {
+      aces += 1;
+      value += 11;
+    } else if (card.value === "K" || card.value === "Q" || card.value === "J") {
+      value += 10;
+    } else {
+      value += parseInt(card.value, 10);
+    }
+  }
+
+  while (value > 21 && aces > 0) {
+    value -= 10;
+    aces -= 1;
+  }
+
+  return value;
+}
+
+export function isNatural21(hand: BlackjackCardType[]): boolean {
+  return calculateHandValue(hand) === 21;
+}
