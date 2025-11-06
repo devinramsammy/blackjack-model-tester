@@ -67,3 +67,7 @@ export function calculateHandValue(hand: BlackjackCardType[]): number {
 export function isNatural21(hand: BlackjackCardType[]): boolean {
   return calculateHandValue(hand) === 21;
 }
+
+export function isBust(hand: BlackjackCardType[]): boolean {
+  return calculateHandValue(hand) > 21;
+}

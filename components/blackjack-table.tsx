@@ -3,7 +3,7 @@
 import { BlackjackCard, BlackjackCardType } from "./blackjack-card";
 import { motion, AnimatePresence } from "motion/react";
 import { useDeckStore } from "@/lib/use-deck-store";
-import { canSplitHand } from "@/lib/deck-utils";
+import { canSplitHand, calculateHandValue } from "@/lib/deck-utils";
 
 interface BlackjackTableProps {
   dealerCards?: BlackjackCardType[];
@@ -15,11 +15,20 @@ export function BlackjackTable({
   playerCards = [[]],
 }: BlackjackTableProps) {
   const { splitHand } = useDeckStore();
+
+  const dealerHandValue = calculateHandValue(dealerCards);
+  const hasFaceDownCards = dealerCards.some((card) => card.faceDown);
+
   return (
     <div className="flex flex-col gap-12">
       <div className="flex items-start gap-6">
         <div className="text-sm font-medium w-20 flex-shrink-0 pt-1">
-          Dealer
+          <div>Dealer</div>
+          {dealerCards.length > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {hasFaceDownCards ? "?" : dealerHandValue}
+            </div>
+          )}
         </div>
         <div className="flex-1 min-h-[7rem]">
           <div className="flex gap-2 flex-wrap">
@@ -55,10 +64,18 @@ export function BlackjackTable({
       <div className="flex flex-col gap-6">
         {playerCards.map((hand, handIndex) => {
           const canSplit = canSplitHand(hand);
+          const handValue = calculateHandValue(hand);
           return (
             <div key={handIndex} className="flex items-start gap-6">
               <div className="text-sm font-medium w-20 flex-shrink-0 pt-1">
-                {playerCards.length > 1 ? `Hand ${handIndex + 1}` : "Hand"}
+                <div>
+                  {playerCards.length > 1 ? `Hand ${handIndex + 1}` : "Hand"}
+                </div>
+                {hand.length > 0 && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {handValue}
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-h-[7rem] flex items-center gap-4">
                 <div className="flex gap-2 flex-wrap">

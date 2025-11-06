@@ -71,9 +71,17 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     const { getCard } = get();
     const card = getCard();
     if (!card) return;
-    set((state) => ({
-      dealerCards: [...state.dealerCards, { ...card, faceDown: false }],
-    }));
+    set((state) => {
+      const newCards = [...state.dealerCards, { ...card, faceDown: false }];
+      const firstFaceDownIndex = newCards.findIndex((c) => c.faceDown);
+      if (firstFaceDownIndex !== -1) {
+        newCards[firstFaceDownIndex] = {
+          ...newCards[firstFaceDownIndex],
+          faceDown: false,
+        };
+      }
+      return { dealerCards: newCards };
+    });
   },
 
   clearCards: () => {
