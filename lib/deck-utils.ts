@@ -71,3 +71,32 @@ export function isNatural21(hand: BlackjackCardType[]): boolean {
 export function isBust(hand: BlackjackCardType[]): boolean {
   return calculateHandValue(hand) > 21;
 }
+
+export function isSoft17(hand: BlackjackCardType[]): boolean {
+  let minTotal = 0;
+  let aces = 0;
+
+  for (const { value } of hand) {
+    if (value === "A") {
+      aces += 1;
+      minTotal += 1;
+    } else if (
+      value === "K" ||
+      value === "Q" ||
+      value === "J" ||
+      value === "10"
+    ) {
+      minTotal += 10;
+    } else {
+      minTotal += Number(value);
+    }
+  }
+
+  return aces > 0 && minTotal === 7;
+}
+
+export function shouldDealerStop(hand: BlackjackCardType[]): boolean {
+  const handValue = calculateHandValue(hand);
+  const soft17 = isSoft17(hand);
+  return soft17 || handValue >= 17;
+}

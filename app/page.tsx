@@ -10,10 +10,9 @@ export default function Home() {
     dealerCards,
     initializeDeck,
     addCardToPlayer,
-    addCardToDealer,
+    stand,
     clearCards,
     initializeHands,
-    flipDealerCard,
   } = useDeckStore();
 
   useEffect(() => {
@@ -24,17 +23,8 @@ export default function Home() {
     addCardToPlayer(0);
   };
 
-  const handleAddCardToDealer = () => {
-    addCardToDealer();
-  };
-
-  const handleFlipDealerCard = () => {
-    if (dealerCards.length > 0) {
-      // Flip the first face-down card, or the first card if all are face-up
-      const firstFaceDownIndex = dealerCards.findIndex((card) => card.faceDown);
-      const indexToFlip = firstFaceDownIndex !== -1 ? firstFaceDownIndex : 0;
-      flipDealerCard(indexToFlip);
-    }
+  const handleStand = () => {
+    stand();
   };
 
   const handleClearTable = () => {
@@ -57,17 +47,10 @@ export default function Home() {
             Add Card to Player
           </button>
           <button
-            onClick={handleAddCardToDealer}
+            onClick={handleStand}
             className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            Add Card to Dealer
-          </button>
-          <button
-            onClick={handleFlipDealerCard}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/90"
-            disabled={dealerCards.length === 0}
-          >
-            Flip Dealer Card
+            Stand
           </button>
           <button
             onClick={handleClearTable}

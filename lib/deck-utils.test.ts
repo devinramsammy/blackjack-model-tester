@@ -1,6 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { canSplitHand, createDeck, calculateHandValue } from "./deck-utils";
+import {
+  canSplitHand,
+  createDeck,
+  calculateHandValue,
+  isSoft17,
+  shouldDealerStop,
+} from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
+
+const createHand = (values: (string | number)[]): BlackjackCardType[] => {
+  return values.map((val, index) => ({
+    value: String(val),
+    suite: index % 2 === 0 ? "hearts" : "spades",
+    faceDown: false,
+  }));
+};
 
 describe("canSplitHand", () => {
   it("should return true when hand has exactly 2 cards with the same value", () => {
@@ -233,5 +247,79 @@ describe("calculateHandValue", () => {
       { value: "A", suite: "hearts", faceDown: false },
     ];
     expect(calculateHandValue(hand)).toBe(11);
+  });
+});
+
+describe("isSoft17", () => {
+  it("should return true for ['A', 6] - Ace as 11", () => {
+    const hand = createHand(["A", 6]);
+    expect(isSoft17(hand)).toBe(true);
+  });
+
+  it("should return true for ['A', 3, 3] - Ace as 11", () => {
+    const hand = createHand(["A", 3, 3]);
+    expect(isSoft17(hand)).toBe(true);
+  });
+
+  it("should return true for ['A', 5, 'A'] - One Ace as 11", () => {
+    const hand = createHand(["A", 5, "A"]);
+    expect(isSoft17(hand)).toBe(true);
+  });
+
+  it("should return false for ['10', 7] - No Ace", () => {
+    const hand = createHand(["10", 7]);
+    expect(isSoft17(hand)).toBe(false);
+  });
+
+  it("should return false for ['A', 6, '10'] - Ace forced to 1", () => {
+    const hand = createHand(["A", 6, "10"]);
+    expect(isSoft17(hand)).toBe(false);
+  });
+
+  it("should return true for ['A', 4, 2] - Ace as 11", () => {
+    const hand = createHand(["A", 4, 2]);
+    expect(isSoft17(hand)).toBe(true);
+  });
+
+  it("should return false for ['A', 4, 2, 'A'] - Not 17", () => {
+    const hand = createHand(["A", 4, 2, "A"]);
+    expect(isSoft17(hand)).toBe(false);
+  });
+
+  it("should return true for ['A', '5', 'A'] - One Ace as 11", () => {
+    const hand = createHand(["A", "5", "A"]);
+    expect(isSoft17(hand)).toBe(true);
+  });
+});
+
+describe("shouldDealerStop", () => {
+  it("should return true for soft 17", () => {
+    const hand = createHand(["A", 6]);
+    expect(shouldDealerStop(hand)).toBe(true);
+  });
+
+  it("should return true for hard 17", () => {
+    const hand = createHand(["10", 7]);
+    expect(shouldDealerStop(hand)).toBe(true);
+  });
+
+  it("should return true for value greater than 17", () => {
+    const hand = createHand(["10", 8]);
+    expect(shouldDealerStop(hand)).toBe(true);
+  });
+
+  it("should return true for value 21", () => {
+    const hand = createHand(["A", "K"]);
+    expect(shouldDealerStop(hand)).toBe(true);
+  });
+
+  it("should return false for value less than 17", () => {
+    const hand = createHand(["10", 4]);
+    expect(shouldDealerStop(hand)).toBe(false);
+  });
+
+  it("should return true for busted hand (value > 21)", () => {
+    const hand = createHand(["10", "10", 5]);
+    expect(shouldDealerStop(hand)).toBe(true);
   });
 });

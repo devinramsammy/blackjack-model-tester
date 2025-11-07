@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { createDeck, DeckCard, canSplitHand } from "./deck-utils";
+import {
+  createDeck,
+  DeckCard,
+  canSplitHand,
+  shouldDealerStop,
+} from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
 
 interface DeckStore {
@@ -9,11 +14,10 @@ interface DeckStore {
   initializeDeck: (deckCount?: number) => void;
   getCard: () => BlackjackCardType | null;
   addCardToPlayer: (handIndex: number) => void;
-  addCardToDealer: () => void;
   clearCards: () => void;
   initializeHands: () => void;
-  flipDealerCard: (index: number) => void;
   splitHand: (handIndex: number) => void;
+  stand: () => void;
 }
 
 export const useDeckStore = create<DeckStore>((set, get) => ({
@@ -67,23 +71,6 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     });
   },
 
-  addCardToDealer: () => {
-    const { getCard } = get();
-    const card = getCard();
-    if (!card) return;
-    set((state) => {
-      const newCards = [...state.dealerCards, { ...card, faceDown: false }];
-      const firstFaceDownIndex = newCards.findIndex((c) => c.faceDown);
-      if (firstFaceDownIndex !== -1) {
-        newCards[firstFaceDownIndex] = {
-          ...newCards[firstFaceDownIndex],
-          faceDown: false,
-        };
-      }
-      return { dealerCards: newCards };
-    });
-  },
-
   clearCards: () => {
     set({
       playerCards: [[]],
@@ -115,14 +102,6 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     }
   },
 
-  flipDealerCard: (index: number) => {
-    set((state) => ({
-      dealerCards: state.dealerCards.map((card, i) =>
-        i === index ? { ...card, faceDown: !card.faceDown } : card
-      ),
-    }));
-  },
-
   splitHand: (handIndex: number) => {
     const { playerCards } = get();
     const hand = playerCards[handIndex];
@@ -142,5 +121,39 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
       newPlayerCards.splice(handIndex + 1, 0, newHand);
       return { playerCards: newPlayerCards };
     });
+  },
+
+  stand: () => {
+    const { getCard, dealerCards } = get();
+
+    let currentDealerCards = dealerCards.map((card, index) => ({
+      ...card,
+      faceDown: index === 0 ? false : card.faceDown,
+    }));
+
+    set({ dealerCards: currentDealerCards });
+
+    const dealDealer = () => {
+      const { dealerCards: currentCards } = get();
+
+      if (shouldDealerStop(currentCards)) {
+        return;
+      }
+
+      const card = getCard();
+      if (!card) return;
+
+      set((state) => ({
+        dealerCards: [...state.dealerCards, { ...card, faceDown: false }],
+      }));
+
+      setTimeout(() => {
+        dealDealer();
+      }, 300);
+    };
+
+    setTimeout(() => {
+      dealDealer();
+    }, 300);
   },
 }));
