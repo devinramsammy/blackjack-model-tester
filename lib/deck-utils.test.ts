@@ -5,6 +5,7 @@ import {
   calculateHandValue,
   isSoft17,
   shouldDealerStop,
+  checkDealerCondition,
 } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
 
@@ -321,5 +322,32 @@ describe("shouldDealerStop", () => {
   it("should return true for busted hand (value > 21)", () => {
     const hand = createHand(["10", "10", 5]);
     expect(shouldDealerStop(hand)).toBe(true);
+  });
+});
+
+describe("checkDealerCondition", () => {
+  it("should return 'dealer-wins' when dealer has exactly 21", () => {
+    const hand = createHand(["A", "K"]);
+    expect(checkDealerCondition(hand)).toBe("dealer-wins");
+  });
+
+  it("should return 'dealer-busts' when dealer has value greater than 21", () => {
+    const hand = createHand(["10", "10", "5"]);
+    expect(checkDealerCondition(hand)).toBe("dealer-busts");
+  });
+
+  it("should return 'dealer-busts' when dealer has multiple cards over 21", () => {
+    const hand = createHand(["10", "9", "5"]);
+    expect(checkDealerCondition(hand)).toBe("dealer-busts");
+  });
+
+  it("should return null when dealer has value less than 21", () => {
+    const hand = createHand(["10", "5"]);
+    expect(checkDealerCondition(hand)).toBe(null);
+  });
+
+  it("should return null for empty hand", () => {
+    const hand: BlackjackCardType[] = [];
+    expect(checkDealerCondition(hand)).toBe(null);
   });
 });

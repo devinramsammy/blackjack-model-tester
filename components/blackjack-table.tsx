@@ -2,22 +2,59 @@
 
 import { BlackjackCard, BlackjackCardType } from "./blackjack-card";
 import { motion, AnimatePresence } from "motion/react";
-import { useDeckStore } from "@/lib/use-deck-store";
+import { useDeckStore, GameState } from "@/lib/use-deck-store";
 import { canSplitHand, calculateHandValue } from "@/lib/deck-utils";
 
 interface BlackjackTableProps {
   dealerCards?: BlackjackCardType[];
   playerCards?: BlackjackCardType[][];
+  gameState?: GameState;
 }
+
+const getGameResultMessage = (gameState: GameState): string | null => {
+  switch (gameState) {
+    case "player-wins":
+      return "Player wins";
+    case "dealer-wins":
+      return "Dealer wins";
+    case "player-busts":
+      return "Player busts";
+    case "dealer-busts":
+      return "Dealer busts";
+    case "tie":
+      return "Tie";
+    default:
+      return null;
+  }
+};
+
+const getResultColorClasses = (gameState: GameState): string => {
+  switch (gameState) {
+    case "player-wins":
+      return "text-green-600";
+    case "dealer-wins":
+    case "player-busts":
+      return "text-red-600";
+    case "dealer-busts":
+      return "text-green-600";
+    case "tie":
+      return "text-yellow-600";
+    default:
+      return "";
+  }
+};
 
 export function BlackjackTable({
   dealerCards = [],
   playerCards = [[]],
+  gameState = "player-turn",
 }: BlackjackTableProps) {
   const { splitHand } = useDeckStore();
 
   const dealerHandValue = calculateHandValue(dealerCards);
   const hasFaceDownCards = dealerCards.some((card) => card.faceDown);
+  const resultMessage = getGameResultMessage(gameState);
+  const resultColorClasses = getResultColorClasses(gameState);
 
   return (
     <div className="flex flex-col gap-12">
@@ -117,6 +154,12 @@ export function BlackjackTable({
           );
         })}
       </div>
+
+      {resultMessage && (
+        <div className={`text-center text-2xl font-bold ${resultColorClasses}`}>
+          {resultMessage}
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ export default function Home() {
   const {
     playerCards,
     dealerCards,
+    gameState,
     initializeDeck,
     addCardToPlayer,
     stand,
@@ -42,13 +43,15 @@ export default function Home() {
         <div className="mb-4 flex gap-2 flex-wrap">
           <button
             onClick={handleAddCardToPlayer}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            disabled={gameState !== "player-turn"}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add Card to Player
           </button>
           <button
             onClick={handleStand}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            disabled={gameState !== "player-turn"}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Stand
           </button>
@@ -59,7 +62,11 @@ export default function Home() {
             Clear Table
           </button>
         </div>
-        <BlackjackTable dealerCards={dealerCards} playerCards={playerCards} />
+        <BlackjackTable
+          dealerCards={dealerCards}
+          playerCards={playerCards}
+          gameState={gameState}
+        />
       </main>
     </div>
   );

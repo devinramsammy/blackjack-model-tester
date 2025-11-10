@@ -4,13 +4,26 @@ import {
   DeckCard,
   canSplitHand,
   shouldDealerStop,
+  isBust,
+  calculateHandValue,
+  checkDealerCondition,
 } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
+
+export type GameState =
+  | "player-turn"
+  | "dealer-turn"
+  | "player-wins"
+  | "dealer-wins"
+  | "player-busts"
+  | "dealer-busts"
+  | "tie";
 
 interface DeckStore {
   deck: DeckCard[];
   playerCards: BlackjackCardType[][];
   dealerCards: BlackjackCardType[];
+  gameState: GameState;
   initializeDeck: (deckCount?: number) => void;
   getCard: () => BlackjackCardType | null;
   addCardToPlayer: (handIndex: number) => void;
@@ -18,12 +31,14 @@ interface DeckStore {
   initializeHands: () => void;
   splitHand: (handIndex: number) => void;
   stand: () => void;
+  resetGameState: () => void;
 }
 
 export const useDeckStore = create<DeckStore>((set, get) => ({
   deck: [],
   playerCards: [[]],
   dealerCards: [],
+  gameState: "player-turn",
 
   initializeDeck: (deckCount = 1) => {
     const newDeck = createDeck(deckCount);
@@ -58,7 +73,9 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
   },
 
   addCardToPlayer: (handIndex: number) => {
-    const { getCard } = get();
+    const { getCard, gameState } = get();
+    if (gameState !== "player-turn") return;
+
     const card = getCard();
     if (!card) return;
     set((state) => {
@@ -69,12 +86,33 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
       ];
       return { playerCards: currentHands };
     });
+
+    const { playerCards: updatedPlayerCards } = get();
+    const playerHand = updatedPlayerCards[handIndex];
+    if (isBust(playerHand)) {
+      set((state) => {
+        const dealerCards = state.dealerCards.map((card, index) => ({
+          ...card,
+          faceDown: index === 0 ? false : card.faceDown,
+        }));
+        return {
+          gameState: "player-busts",
+          dealerCards,
+        };
+      });
+      return;
+    }
+  },
+
+  resetGameState: () => {
+    set({ gameState: "player-turn" });
   },
 
   clearCards: () => {
     set({
       playerCards: [[]],
       dealerCards: [],
+      gameState: "player-turn",
     });
   },
 
@@ -87,6 +125,11 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     const dealerCard2 = getCard();
 
     if (playerCard1 && playerCard2 && dealerCard1 && dealerCard2) {
+      const dealerCards = [
+        { ...dealerCard1, faceDown: true },
+        { ...dealerCard2, faceDown: false },
+      ];
+
       set({
         playerCards: [
           [
@@ -94,11 +137,23 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
             { ...playerCard2, faceDown: false },
           ],
         ],
-        dealerCards: [
-          { ...dealerCard1, faceDown: true },
-          { ...dealerCard2, faceDown: false },
-        ],
+        dealerCards,
+        gameState: "player-turn",
       });
+
+      const dealerCondition = checkDealerCondition(dealerCards);
+      if (dealerCondition) {
+        set((state) => {
+          const dealerCards = state.dealerCards.map((card, index) => ({
+            ...card,
+            faceDown: index === 0 ? false : card.faceDown,
+          }));
+          return {
+            gameState: dealerCondition,
+            dealerCards,
+          };
+        });
+      }
     }
   },
 
@@ -124,19 +179,45 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
   },
 
   stand: () => {
-    const { getCard, dealerCards } = get();
+    const { getCard, dealerCards, gameState } = get();
+    if (gameState !== "player-turn") return;
 
     let currentDealerCards = dealerCards.map((card, index) => ({
       ...card,
       faceDown: index === 0 ? false : card.faceDown,
     }));
 
-    set({ dealerCards: currentDealerCards });
+    set({ dealerCards: currentDealerCards, gameState: "dealer-turn" });
 
     const dealDealer = () => {
-      const { dealerCards: currentCards } = get();
+      const { dealerCards: currentCards, gameState: currentGameState } = get();
+
+      if (currentGameState !== "dealer-turn") {
+        return;
+      }
 
       if (shouldDealerStop(currentCards)) {
+        const dealerCondition = checkDealerCondition(currentCards);
+        if (dealerCondition) {
+          set({ gameState: dealerCondition });
+          return;
+        }
+
+        const { playerCards } = get();
+        const playerHand = playerCards[0];
+        const playerValue = calculateHandValue(playerHand);
+        const dealerValue = calculateHandValue(currentCards);
+
+        let finalState: GameState;
+        if (playerValue > dealerValue) {
+          finalState = "player-wins";
+        } else if (dealerValue > playerValue) {
+          finalState = "dealer-wins";
+        } else {
+          finalState = "tie";
+        }
+
+        set({ gameState: finalState });
         return;
       }
 
@@ -148,6 +229,12 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
       }));
 
       setTimeout(() => {
+        const { dealerCards: updatedCards } = get();
+        const dealerCondition = checkDealerCondition(updatedCards);
+        if (dealerCondition) {
+          set({ gameState: dealerCondition });
+          return;
+        }
         dealDealer();
       }, 300);
     };

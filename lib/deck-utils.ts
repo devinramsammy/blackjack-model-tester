@@ -100,3 +100,16 @@ export function shouldDealerStop(hand: BlackjackCardType[]): boolean {
   const soft17 = isSoft17(hand);
   return soft17 || handValue >= 17;
 }
+
+export function checkDealerCondition(
+  dealerCards: BlackjackCardType[]
+): "dealer-wins" | "dealer-busts" | null {
+  const dealerValue = calculateHandValue(dealerCards);
+  if (dealerValue === 21) {
+    return "dealer-wins";
+  }
+  if (isBust(dealerCards)) {
+    return "dealer-busts";
+  }
+  return null;
+}
