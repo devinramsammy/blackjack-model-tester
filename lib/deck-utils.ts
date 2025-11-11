@@ -113,3 +113,16 @@ export function checkDealerCondition(
   }
   return null;
 }
+
+export function checkPlayerCondition(
+  playerCards: BlackjackCardType[]
+): "player-wins" | "player-busts" | null {
+  const playerValue = calculateHandValue(playerCards);
+  if (playerValue === 21) {
+    return "player-wins";
+  }
+  if (isBust(playerCards)) {
+    return "player-busts";
+  }
+  return null;
+}

@@ -4,9 +4,9 @@ import {
   DeckCard,
   canSplitHand,
   shouldDealerStop,
-  isBust,
   calculateHandValue,
   checkDealerCondition,
+  checkPlayerCondition,
 } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
 
@@ -89,18 +89,18 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
 
     const { playerCards: updatedPlayerCards } = get();
     const playerHand = updatedPlayerCards[handIndex];
-    if (isBust(playerHand)) {
+    const playerCondition = checkPlayerCondition(playerHand);
+    if (playerCondition === "player-busts") {
       set((state) => {
         const dealerCards = state.dealerCards.map((card, index) => ({
           ...card,
           faceDown: index === 0 ? false : card.faceDown,
         }));
         return {
-          gameState: "player-busts",
+          gameState: playerCondition,
           dealerCards,
         };
       });
-      return;
     }
   },
 
@@ -125,18 +125,17 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
     const dealerCard2 = getCard();
 
     if (playerCard1 && playerCard2 && dealerCard1 && dealerCard2) {
+      const playerCards = [
+        { ...playerCard1, faceDown: false },
+        { ...playerCard2, faceDown: false },
+      ];
       const dealerCards = [
         { ...dealerCard1, faceDown: true },
         { ...dealerCard2, faceDown: false },
       ];
 
       set({
-        playerCards: [
-          [
-            { ...playerCard1, faceDown: false },
-            { ...playerCard2, faceDown: false },
-          ],
-        ],
+        playerCards: [playerCards],
         dealerCards,
         gameState: "player-turn",
       });
@@ -150,6 +149,19 @@ export const useDeckStore = create<DeckStore>((set, get) => ({
           }));
           return {
             gameState: dealerCondition,
+            dealerCards,
+          };
+        });
+      }
+      const playerCondition = checkPlayerCondition(playerCards);
+      if (playerCondition) {
+        set((state) => {
+          const dealerCards = state.dealerCards.map((card, index) => ({
+            ...card,
+            faceDown: index === 0 ? false : card.faceDown,
+          }));
+          return {
+            gameState: playerCondition,
             dealerCards,
           };
         });
