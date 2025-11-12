@@ -9,9 +9,10 @@ export default function Home() {
     playerCards,
     dealerCards,
     gameState,
+    currentHandIndex,
+    stoodOnHands,
+    handOutcomes,
     initializeDeck,
-    addCardToPlayer,
-    stand,
     clearCards,
     initializeHands,
   } = useDeckStore();
@@ -19,14 +20,6 @@ export default function Home() {
   useEffect(() => {
     initializeDeck(1);
   }, [initializeDeck]);
-
-  const handleAddCardToPlayer = () => {
-    addCardToPlayer(0);
-  };
-
-  const handleStand = () => {
-    stand();
-  };
 
   const handleClearTable = () => {
     clearCards();
@@ -42,20 +35,6 @@ export default function Home() {
       <main className="container mx-auto py-8 px-4">
         <div className="mb-4 flex gap-2 flex-wrap">
           <button
-            onClick={handleAddCardToPlayer}
-            disabled={gameState !== "player-turn"}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Add Card to Player
-          </button>
-          <button
-            onClick={handleStand}
-            disabled={gameState !== "player-turn"}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Stand
-          </button>
-          <button
             onClick={handleClearTable}
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
           >
@@ -66,6 +45,9 @@ export default function Home() {
           dealerCards={dealerCards}
           playerCards={playerCards}
           gameState={gameState}
+          currentHandIndex={currentHandIndex}
+          stoodOnHands={stoodOnHands}
+          handOutcomes={handOutcomes}
         />
       </main>
     </div>

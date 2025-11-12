@@ -7,8 +7,12 @@ import {
   shouldDealerStop,
   checkDealerCondition,
   checkPlayerCondition,
+  areAllHandsCompleted,
+  revealDealerCards,
+  getHandCompletionState,
 } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
+import type { HandOutcome } from "./use-deck-store";
 
 const createHand = (values: (string | number)[]): BlackjackCardType[] => {
   return values.map((val, index) => ({
@@ -377,5 +381,353 @@ describe("checkPlayerCondition", () => {
   it("should return null for empty hand", () => {
     const hand: BlackjackCardType[] = [];
     expect(checkPlayerCondition(hand)).toBe(null);
+  });
+});
+
+describe("areAllHandsCompleted", () => {
+  it("should return true when all hands have outcomes", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [0, "player-wins"],
+      [1, "dealer-wins"],
+      [2, "tie"],
+    ]);
+    const stoodOnHands = new Set<number>();
+    const playerCardsLength = 3;
+    expect(
+      areAllHandsCompleted(handOutcomes, stoodOnHands, playerCardsLength)
+    ).toBe(true);
+  });
+
+  it("should return false when some hands are incomplete", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [0, "player-wins"],
+    ]);
+    const stoodOnHands = new Set<number>();
+    const playerCardsLength = 3;
+    expect(
+      areAllHandsCompleted(handOutcomes, stoodOnHands, playerCardsLength)
+    ).toBe(false);
+  });
+
+  it("should return false when a hand has neither outcome nor stood", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [0, "player-wins"],
+      [2, "dealer-wins"],
+    ]);
+    const stoodOnHands = new Set<number>();
+    const playerCardsLength = 3;
+    expect(
+      areAllHandsCompleted(handOutcomes, stoodOnHands, playerCardsLength)
+    ).toBe(false);
+  });
+
+  it("should return true for single hand with outcome", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [0, "player-wins"],
+    ]);
+    const stoodOnHands = new Set<number>();
+    const playerCardsLength = 1;
+    expect(
+      areAllHandsCompleted(handOutcomes, stoodOnHands, playerCardsLength)
+    ).toBe(true);
+  });
+
+  it("should return true for empty hands (playerCardsLength = 0)", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const playerCardsLength = 0;
+    expect(
+      areAllHandsCompleted(handOutcomes, stoodOnHands, playerCardsLength)
+    ).toBe(true);
+  });
+});
+
+describe("revealDealerCards", () => {
+  it("should reveal the first card (set faceDown to false)", () => {
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+    const result = revealDealerCards(dealerCards);
+    expect(result[0].faceDown).toBe(false);
+    expect(result[1].faceDown).toBe(false);
+  });
+
+  it("should keep other cards faceDown status unchanged", () => {
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: true },
+      { value: "Q", suite: "diamonds", faceDown: false },
+    ];
+    const result = revealDealerCards(dealerCards);
+    expect(result[0].faceDown).toBe(false);
+    expect(result[1].faceDown).toBe(true);
+    expect(result[2].faceDown).toBe(false);
+  });
+
+  it("should handle empty array", () => {
+    const dealerCards: BlackjackCardType[] = [];
+    const result = revealDealerCards(dealerCards);
+    expect(result).toEqual([]);
+  });
+
+  it("should handle single card", () => {
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+    ];
+    const result = revealDealerCards(dealerCards);
+    expect(result[0].faceDown).toBe(false);
+  });
+
+  it("should not modify other card properties", () => {
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+    const result = revealDealerCards(dealerCards);
+    expect(result[0].value).toBe("A");
+    expect(result[0].suite).toBe("hearts");
+    expect(result[1].value).toBe("K");
+    expect(result[1].suite).toBe("spades");
+  });
+
+  it("should handle all cards already face up", () => {
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: false },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+    const result = revealDealerCards(dealerCards);
+    expect(result[0].faceDown).toBe(false);
+    expect(result[1].faceDown).toBe(false);
+  });
+});
+
+describe("getHandCompletionState", () => {
+  it("should update hand outcomes with the new outcome", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      1,
+      dealerCards
+    );
+
+    expect(result.handOutcomes.get(0)).toBe("player-wins");
+  });
+
+  it("should add hand to stoodOnHands", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      1,
+      dealerCards
+    );
+
+    expect(result.stoodOnHands.has(0)).toBe(true);
+  });
+
+  it("should calculate next hand index correctly when not last hand", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      3,
+      dealerCards
+    );
+
+    expect(result.currentHandIndex).toBe(1);
+  });
+
+  it("should not advance hand index when completing last hand", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      2,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      2,
+      3,
+      dealerCards
+    );
+
+    expect(result.currentHandIndex).toBe(2);
+  });
+
+  it("should reveal dealer cards when all hands are completed", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [1, "dealer-wins"],
+    ]);
+    const stoodOnHands = new Set<number>([1]);
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      2,
+      dealerCards
+    );
+
+    expect(result.dealerCards[0].faceDown).toBe(false);
+  });
+
+  it("should not reveal dealer cards when hands are not all completed", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      3,
+      dealerCards
+    );
+
+    expect(result.dealerCards[0].faceDown).toBe(true);
+  });
+
+  it("should preserve existing hand outcomes", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [1, "dealer-wins"],
+      [2, "tie"],
+    ]);
+    const stoodOnHands = new Set<number>([1, 2]);
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      3,
+      dealerCards
+    );
+
+    expect(result.handOutcomes.get(1)).toBe("dealer-wins");
+    expect(result.handOutcomes.get(2)).toBe("tie");
+    expect(result.handOutcomes.get(0)).toBe("player-wins");
+  });
+
+  it("should preserve existing stood on hands", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>([1, 2]);
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-wins",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      3,
+      dealerCards
+    );
+
+    expect(result.stoodOnHands.has(1)).toBe(true);
+    expect(result.stoodOnHands.has(2)).toBe(true);
+    expect(result.stoodOnHands.has(0)).toBe(true);
+  });
+
+  it("should handle single hand completion", () => {
+    const handOutcomes = new Map<number, HandOutcome>();
+    const stoodOnHands = new Set<number>();
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      0,
+      "player-busts",
+      handOutcomes,
+      stoodOnHands,
+      0,
+      1,
+      dealerCards
+    );
+
+    expect(result.handOutcomes.get(0)).toBe("player-busts");
+    expect(result.stoodOnHands.has(0)).toBe(true);
+    expect(result.currentHandIndex).toBe(0);
+    expect(result.dealerCards[0].faceDown).toBe(false);
+  });
+
+  it("should handle multiple hands with mix of outcomes", () => {
+    const handOutcomes = new Map<number, HandOutcome>([
+      [0, "player-wins"],
+    ]);
+    const stoodOnHands = new Set<number>([0]);
+    const dealerCards: BlackjackCardType[] = [
+      { value: "A", suite: "hearts", faceDown: true },
+      { value: "K", suite: "spades", faceDown: false },
+    ];
+
+    const result = getHandCompletionState(
+      1,
+      "dealer-wins",
+      handOutcomes,
+      stoodOnHands,
+      1,
+      2,
+      dealerCards
+    );
+
+    expect(result.handOutcomes.get(0)).toBe("player-wins");
+    expect(result.handOutcomes.get(1)).toBe("dealer-wins");
+    expect(result.stoodOnHands.has(0)).toBe(true);
+    expect(result.stoodOnHands.has(1)).toBe(true);
+    expect(result.dealerCards[0].faceDown).toBe(false);
   });
 });

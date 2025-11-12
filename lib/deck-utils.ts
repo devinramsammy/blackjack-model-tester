@@ -1,5 +1,6 @@
 import { CARD_VALUES, CARD_SUITES } from "./constants";
 import { BlackjackCardType, CutCardType } from "@/components/blackjack-card";
+import type { HandOutcome } from "./use-deck-store";
 
 export type DeckCard = BlackjackCardType | CutCardType;
 
@@ -125,4 +126,66 @@ export function checkPlayerCondition(
     return "player-busts";
   }
   return null;
+}
+
+export function areAllHandsCompleted(
+  handOutcomes: Map<number, HandOutcome>,
+  stoodOnHands: Set<number>,
+  playerCardsLength: number
+): boolean {
+  for (let i = 0; i < playerCardsLength; i++) {
+    const hasOutcome = handOutcomes.has(i);
+    const hasStood = stoodOnHands.has(i);
+    if (!hasOutcome && !hasStood) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function revealDealerCards(
+  dealerCards: BlackjackCardType[]
+): BlackjackCardType[] {
+  return dealerCards.map((card, index) => ({
+    ...card,
+    faceDown: index === 0 ? false : card.faceDown,
+  }));
+}
+
+export function getHandCompletionState(
+  handIndex: number,
+  outcome: HandOutcome,
+  handOutcomes: Map<number, HandOutcome>,
+  stoodOnHands: Set<number>,
+  currentHandIndex: number,
+  playerCardsLength: number,
+  dealerCards: BlackjackCardType[]
+) {
+  const newOutcomes = new Map(handOutcomes);
+  newOutcomes.set(handIndex, outcome);
+  const newStoodOnHands = new Set(stoodOnHands);
+  newStoodOnHands.add(handIndex);
+
+  let nextHandIndex = currentHandIndex;
+  if (handIndex + 1 < playerCardsLength) {
+    nextHandIndex = handIndex + 1;
+  }
+
+  const allHandsCompleted = areAllHandsCompleted(
+    newOutcomes,
+    newStoodOnHands,
+    playerCardsLength
+  );
+
+  let updatedDealerCards = dealerCards;
+  if (allHandsCompleted) {
+    updatedDealerCards = revealDealerCards(dealerCards);
+  }
+
+  return {
+    handOutcomes: newOutcomes,
+    stoodOnHands: newStoodOnHands,
+    currentHandIndex: nextHandIndex,
+    dealerCards: updatedDealerCards,
+  };
 }
