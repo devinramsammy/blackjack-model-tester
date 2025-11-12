@@ -12,6 +12,7 @@ import {
   getHandCompletionState,
 } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
+import { useBalanceStore } from "./use-balance-store";
 
 export type GameState = "player-turn" | "dealer-turn" | "game-over";
 
@@ -31,6 +32,7 @@ interface DeckStore {
   currentHandIndex: number;
   stoodOnHands: Set<number>;
   handOutcomes: Map<number, HandOutcome>;
+  handBets: Map<number, number>;
   initializeDeck: (deckCount?: number) => void;
   getCard: () => BlackjackCardType | null;
   addCardToPlayer: (handIndex: number) => void;
@@ -40,9 +42,31 @@ interface DeckStore {
   stand: (handIndex: number) => void;
   setCurrentHandIndex: (index: number) => void;
   resetGameState: () => void;
+  setBet: (handIndex: number, bet: number) => void;
+  getBet: (handIndex: number) => number;
 }
 
 export const useDeckStore = create<DeckStore>((set, get) => {
+  const updateBalanceForOutcomes = (
+    newOutcomes: Map<number, HandOutcome>,
+    previousOutcomes: Map<number, HandOutcome>,
+    bets: Map<number, number>
+  ) => {
+    const { updateBalance } = useBalanceStore.getState();
+    newOutcomes.forEach((outcome, handIndex) => {
+      if (previousOutcomes.has(handIndex)) return;
+
+      const bet = bets.get(handIndex) || 0;
+      if (bet === 0) return;
+
+      if (outcome === "player-wins" || outcome === "dealer-busts") {
+        updateBalance(bet);
+      } else if (outcome === "dealer-wins" || outcome === "player-busts") {
+        updateBalance(-bet);
+      }
+    });
+  };
+
   const startDealerTurn = () => {
     const { dealerCards } = get();
     const currentDealerCards = revealDealerCards(dealerCards);
@@ -68,6 +92,11 @@ export const useDeckStore = create<DeckStore>((set, get) => {
                 newOutcomes.set(i, "dealer-busts");
               }
             }
+            updateBalanceForOutcomes(
+              newOutcomes,
+              state.handOutcomes,
+              state.handBets
+            );
             return { handOutcomes: newOutcomes, gameState: "game-over" };
           });
           return;
@@ -96,6 +125,11 @@ export const useDeckStore = create<DeckStore>((set, get) => {
             }
             newOutcomes.set(i, outcome);
           }
+          updateBalanceForOutcomes(
+            newOutcomes,
+            state.handOutcomes,
+            state.handBets
+          );
           return { handOutcomes: newOutcomes, gameState: "game-over" };
         });
         return;
@@ -123,6 +157,11 @@ export const useDeckStore = create<DeckStore>((set, get) => {
                 newOutcomes.set(i, "dealer-busts");
               }
             }
+            updateBalanceForOutcomes(
+              newOutcomes,
+              state.handOutcomes,
+              state.handBets
+            );
             return { handOutcomes: newOutcomes, gameState: "game-over" };
           });
           return;
@@ -144,6 +183,7 @@ export const useDeckStore = create<DeckStore>((set, get) => {
     currentHandIndex: 0,
     stoodOnHands: new Set<number>(),
     handOutcomes: new Map<number, HandOutcome>(),
+    handBets: new Map<number, number>(),
 
     initializeDeck: (deckCount = 1) => {
       const newDeck = createDeck(deckCount);
@@ -218,12 +258,22 @@ export const useDeckStore = create<DeckStore>((set, get) => {
 
           if (allHandsCompleted) {
             shouldStartDealerTurn = true;
+            updateBalanceForOutcomes(
+              completionState.handOutcomes,
+              state.handOutcomes,
+              state.handBets
+            );
             return {
               ...completionState,
               gameState: "dealer-turn" as GameState,
             };
           }
 
+          updateBalanceForOutcomes(
+            completionState.handOutcomes,
+            state.handOutcomes,
+            state.handBets
+          );
           return completionState;
         });
 
@@ -231,8 +281,8 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           startDealerTurn();
         }
       } else if (playerCondition === "player-wins") {
-        set((state) =>
-          getHandCompletionState(
+        set((state) => {
+          const completionState = getHandCompletionState(
             handIndex,
             "player-wins",
             state.handOutcomes,
@@ -240,8 +290,14 @@ export const useDeckStore = create<DeckStore>((set, get) => {
             state.currentHandIndex,
             state.playerCards.length,
             state.dealerCards
-          )
-        );
+          );
+          updateBalanceForOutcomes(
+            completionState.handOutcomes,
+            state.handOutcomes,
+            state.handBets
+          );
+          return completionState;
+        });
       }
     },
 
@@ -257,11 +313,14 @@ export const useDeckStore = create<DeckStore>((set, get) => {
         currentHandIndex: 0,
         stoodOnHands: new Set<number>(),
         handOutcomes: new Map<number, HandOutcome>(),
+        handBets: new Map<number, number>(),
       });
     },
 
     initializeHands: () => {
       const { getCard } = get();
+      const { getBetValue } = useBalanceStore.getState();
+      const betValue = getBetValue();
 
       const playerCard1 = getCard();
       const playerCard2 = getCard();
@@ -282,6 +341,7 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           playerCards: [playerCards],
           dealerCards,
           gameState: "player-turn",
+          handBets: new Map([[0, betValue]]),
         });
 
         const dealerCondition = checkDealerCondition(dealerCards);
@@ -289,6 +349,11 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           set((state) => {
             const newOutcomes = new Map<number, HandOutcome>();
             newOutcomes.set(0, "dealer-busts");
+            updateBalanceForOutcomes(
+              newOutcomes,
+              state.handOutcomes,
+              state.handBets
+            );
             return {
               gameState: "game-over",
               dealerCards: revealDealerCards(state.dealerCards),
@@ -302,6 +367,11 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           set((state) => {
             const newOutcomes = new Map<number, HandOutcome>();
             newOutcomes.set(0, "player-wins");
+            updateBalanceForOutcomes(
+              newOutcomes,
+              state.handOutcomes,
+              state.handBets
+            );
             return {
               gameState: "game-over",
               dealerCards: revealDealerCards(state.dealerCards),
@@ -314,6 +384,11 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           set((state) => {
             const newOutcomes = new Map<number, HandOutcome>();
             newOutcomes.set(0, "player-busts");
+            updateBalanceForOutcomes(
+              newOutcomes,
+              state.handOutcomes,
+              state.handBets
+            );
             return {
               gameState: "game-over",
               dealerCards: revealDealerCards(state.dealerCards),
@@ -328,6 +403,8 @@ export const useDeckStore = create<DeckStore>((set, get) => {
     splitHand: (handIndex: number) => {
       const { playerCards } = get();
       const hand = playerCards[handIndex];
+      const { getBetValue } = useBalanceStore.getState();
+      const betValue = getBetValue();
 
       if (!hand || !canSplitHand(hand)) {
         return;
@@ -344,7 +421,12 @@ export const useDeckStore = create<DeckStore>((set, get) => {
         const newPlayerCards = [...state.playerCards];
         newPlayerCards[handIndex] = originalHand;
         newPlayerCards.splice(handIndex + 1, 0, newHand);
-        return { playerCards: newPlayerCards };
+
+        const newHandBets = new Map(state.handBets);
+        newHandBets.set(handIndex, betValue);
+        newHandBets.set(handIndex + 1, betValue);
+
+        return { playerCards: newPlayerCards, handBets: newHandBets };
       });
     },
 
@@ -374,6 +456,19 @@ export const useDeckStore = create<DeckStore>((set, get) => {
         const nextHandIndex = handIndex + 1;
         set({ currentHandIndex: nextHandIndex });
       }
+    },
+
+    setBet: (handIndex: number, bet: number) => {
+      set((state) => {
+        const newHandBets = new Map(state.handBets);
+        newHandBets.set(handIndex, bet);
+        return { handBets: newHandBets };
+      });
+    },
+
+    getBet: (handIndex: number) => {
+      const { handBets } = get();
+      return handBets.get(handIndex) || 0;
     },
   };
 });

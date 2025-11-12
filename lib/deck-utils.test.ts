@@ -399,9 +399,7 @@ describe("areAllHandsCompleted", () => {
   });
 
   it("should return false when some hands are incomplete", () => {
-    const handOutcomes = new Map<number, HandOutcome>([
-      [0, "player-wins"],
-    ]);
+    const handOutcomes = new Map<number, HandOutcome>([[0, "player-wins"]]);
     const stoodOnHands = new Set<number>();
     const playerCardsLength = 3;
     expect(
@@ -422,9 +420,7 @@ describe("areAllHandsCompleted", () => {
   });
 
   it("should return true for single hand with outcome", () => {
-    const handOutcomes = new Map<number, HandOutcome>([
-      [0, "player-wins"],
-    ]);
+    const handOutcomes = new Map<number, HandOutcome>([[0, "player-wins"]]);
     const stoodOnHands = new Set<number>();
     const playerCardsLength = 1;
     expect(
@@ -588,9 +584,7 @@ describe("getHandCompletionState", () => {
   });
 
   it("should reveal dealer cards when all hands are completed", () => {
-    const handOutcomes = new Map<number, HandOutcome>([
-      [1, "dealer-wins"],
-    ]);
+    const handOutcomes = new Map<number, HandOutcome>([[1, "dealer-wins"]]);
     const stoodOnHands = new Set<number>([1]);
     const dealerCards: BlackjackCardType[] = [
       { value: "A", suite: "hearts", faceDown: true },
@@ -705,9 +699,7 @@ describe("getHandCompletionState", () => {
   });
 
   it("should handle multiple hands with mix of outcomes", () => {
-    const handOutcomes = new Map<number, HandOutcome>([
-      [0, "player-wins"],
-    ]);
+    const handOutcomes = new Map<number, HandOutcome>([[0, "player-wins"]]);
     const stoodOnHands = new Set<number>([0]);
     const dealerCards: BlackjackCardType[] = [
       { value: "A", suite: "hearts", faceDown: true },
