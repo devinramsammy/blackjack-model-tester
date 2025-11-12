@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { BlackjackTable } from "@/components/blackjack-table";
 import { useDeckStore } from "@/lib/use-deck-store";
 import { useBalanceStore } from "@/lib/use-balance-store";
+import { Slider } from "@/components/ui/slider";
 
 export default function Home() {
   const {
@@ -52,23 +53,19 @@ export default function Home() {
           <div className="px-4 py-2 bg-muted text-muted-foreground rounded">
             Balance: ${balance}
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-muted text-muted-foreground rounded">
-            <label
-              htmlFor="bet-input"
-              className="text-sm font-medium whitespace-nowrap"
-            >
-              Bet: $
+          <div className="flex items-center gap-4 px-4 py-2 bg-muted text-muted-foreground rounded">
+            <label className="text-sm font-medium whitespace-nowrap w-24">
+              Bet: ${betValue}
             </label>
-            <input
-              id="bet-input"
-              type="number"
-              min="1"
-              max="1000"
-              step="1"
-              value={betValue}
-              onChange={(e) => handleBetChange(Number(e.target.value) || 0)}
-              className="w-20 px-2 py-1 bg-background border border-border rounded text-sm"
-            />
+            <div className="w-48 flex-shrink-0">
+              <Slider
+                value={[betValue]}
+                onValueChange={(values) => handleBetChange(values[0])}
+                min={1}
+                max={Math.min(1000, balance)}
+                step={1}
+              />
+            </div>
           </div>
         </div>
         <BlackjackTable
