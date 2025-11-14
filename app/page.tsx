@@ -5,6 +5,7 @@ import { BlackjackTable } from "@/components/blackjack-table";
 import { useDeckStore } from "@/lib/use-deck-store";
 import { useBalanceStore } from "@/lib/use-balance-store";
 import { Slider } from "@/components/ui/slider";
+import { BalanceHistoryChart } from "@/components/balance-history-chart";
 
 export default function Home() {
   const {
@@ -67,6 +68,9 @@ export default function Home() {
               />
             </div>
           </div>
+        </div>
+        <div className="mb-6">
+          <BalanceHistoryChart />
         </div>
         <BlackjackTable
           dealerCards={dealerCards}

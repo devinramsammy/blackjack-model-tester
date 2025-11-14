@@ -4,6 +4,8 @@ import type { HandOutcome } from "./use-deck-store";
 
 export type DeckCard = BlackjackCardType | CutCardType;
 
+export type PlayerMove = "HIT" | "STAND" | "DOUBLE" | "SPLIT";
+
 export function createDeck(deckCount: number): DeckCard[] {
   const cards: DeckCard[] = [];
 
@@ -188,4 +190,24 @@ export function getHandCompletionState(
     currentHandIndex: nextHandIndex,
     dealerCards: updatedDealerCards,
   };
+}
+
+export function getAvailablePlayerMoves(
+  hand: BlackjackCardType[]
+): PlayerMove[] {
+  if (hand.length === 0 || isBust(hand)) {
+    return [];
+  }
+
+  const moves: PlayerMove[] = ["HIT", "STAND"];
+
+  if (hand.length === 2) {
+    moves.push("DOUBLE");
+  }
+
+  if (canSplitHand(hand)) {
+    moves.push("SPLIT");
+  }
+
+  return moves;
 }

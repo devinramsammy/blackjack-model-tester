@@ -10,6 +10,7 @@ import {
   areAllHandsCompleted,
   revealDealerCards,
   getHandCompletionState,
+  getAvailablePlayerMoves,
 } from "./deck-utils";
 import { BlackjackCardType } from "@/components/blackjack-card";
 import type { HandOutcome } from "./use-deck-store";
@@ -721,5 +722,144 @@ describe("getHandCompletionState", () => {
     expect(result.stoodOnHands.has(0)).toBe(true);
     expect(result.stoodOnHands.has(1)).toBe(true);
     expect(result.dealerCards[0].faceDown).toBe(false);
+  });
+});
+
+describe("getAvailablePlayerMoves", () => {
+  it("should return empty array for empty hand", () => {
+    const hand: BlackjackCardType[] = [];
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toEqual([]);
+  });
+
+  it("should return empty array for bust hand", () => {
+    const hand = createHand(["10", "10", "5"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toEqual([]);
+  });
+
+  it("should return HIT and STAND for single card hand", () => {
+    const hand = createHand(["A"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).not.toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(2);
+  });
+
+  it("should return HIT, STAND, and DOUBLE for two-card hand", () => {
+    const hand = createHand(["10", "5"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(3);
+  });
+
+  it("should return HIT, STAND, DOUBLE, and SPLIT for splittable two-card hand", () => {
+    const hand = createHand(["A", "A"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).toContain("SPLIT");
+    expect(moves.length).toBe(4);
+  });
+
+  it("should return HIT, STAND, DOUBLE, and SPLIT for matching face cards", () => {
+    const hand = createHand(["K", "K"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).toContain("SPLIT");
+    expect(moves.length).toBe(4);
+  });
+
+  it("should return HIT, STAND, DOUBLE, and SPLIT for matching number cards", () => {
+    const hand = createHand(["10", "10"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).toContain("SPLIT");
+    expect(moves.length).toBe(4);
+  });
+
+  it("should return HIT and STAND for three-card hand", () => {
+    const hand = createHand(["10", "5", "3"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).not.toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(2);
+  });
+
+  it("should return HIT and STAND for hand with 21", () => {
+    const hand = createHand(["A", "K"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves.length).toBe(3);
+  });
+
+  it("should return HIT and STAND for hand with 21 from three cards", () => {
+    const hand = createHand(["10", "5", "6"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).not.toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(2);
+  });
+
+  it("should return HIT, STAND, and DOUBLE for two-card hand with low total", () => {
+    const hand = createHand(["2", "3"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(3);
+  });
+
+  it("should return HIT, STAND, and DOUBLE for two-card hand with high total", () => {
+    const hand = createHand(["9", "9"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).toContain("SPLIT");
+    expect(moves.length).toBe(4);
+  });
+
+  it("should not return SPLIT for two-card hand with different values", () => {
+    const hand = createHand(["A", "K"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(3);
+  });
+
+  it("should return HIT and STAND for four-card hand", () => {
+    const hand = createHand(["2", "3", "4", "5"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toContain("HIT");
+    expect(moves).toContain("STAND");
+    expect(moves).not.toContain("DOUBLE");
+    expect(moves).not.toContain("SPLIT");
+    expect(moves.length).toBe(2);
+  });
+
+  it("should return empty array for hand that busts", () => {
+    const hand = createHand(["10", "10", "2"]);
+    const moves = getAvailablePlayerMoves(hand);
+    expect(moves).toEqual([]);
   });
 });
