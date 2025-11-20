@@ -41,6 +41,14 @@ export default function Home() {
   }, [initializeDeck]);
 
   useEffect(() => {
+    if (betValue > balance) {
+      setBetValue(Math.max(0, balance));
+    } else if (betValue < 0) {
+      setBetValue(0);
+    }
+  }, [balance, betValue, setBetValue]);
+
+  useEffect(() => {
     if (!isAutoplayActive) {
       setPreviousGameState(gameState);
       return;
@@ -164,7 +172,8 @@ export default function Home() {
   };
 
   const handleBetChange = (value: number) => {
-    setBetValue(value);
+    const clampedValue = Math.max(0, Math.min(value, balance));
+    setBetValue(clampedValue);
   };
 
   const handleTemperatureChange = (value: number) => {
@@ -183,73 +192,115 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <main className="container mx-auto py-8 px-4">
-        <div className="mb-4 flex gap-4 flex-wrap items-center">
-          <button
-            onClick={handleClearTable}
-            className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
-          >
-            Clear Table
-          </button>
-          {!isAutoplayActive ? (
-            <button
-              onClick={handleStartAutoplay}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-            >
-              Start
-            </button>
-          ) : (
-            <button
-              onClick={handleStopAutoplay}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/90"
-            >
-              Stop
-            </button>
-          )}
-          <div className="px-4 py-2 bg-muted text-muted-foreground rounded">
-            Balance: ${balance}
-          </div>
-          <div className="flex items-center gap-4 px-4 py-2 bg-muted text-muted-foreground rounded">
-            <label className="text-sm font-medium whitespace-nowrap w-24">
-              Bet: ${betValue}
-            </label>
-            <div className="w-48 flex-shrink-0">
-              <Slider
-                value={[betValue]}
-                onValueChange={(values) => handleBetChange(values[0])}
-                min={1}
-                max={Math.min(1000, balance)}
-                step={1}
-              />
+    <div className="min-h-screen bg-white text-black font-mono p-4 md:p-8">
+      <main className="max-w-7xl mx-auto">
+        <h1 className="text-4xl md:text-6xl font-black mb-8 uppercase tracking-tighter leading-none border-b-4 border-black pb-4">
+          Blackjack
+          <span className="block text-xl md:text-2xl font-normal mt-2 tracking-normal">
+            Model Tester
+          </span>
+        </h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-2 border-black mb-8">
+          <div className="md:col-span-4 flex flex-col border-b-2 md:border-b-0 md:border-r-2 border-black">
+            <div className="p-4 border-b-2 border-black bg-black text-white">
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Game Control
+              </span>
+            </div>
+            <div className="p-4 flex gap-2 flex-wrap bg-white">
+              <button
+                onClick={handleClearTable}
+                className="px-4 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white transition-colors font-bold uppercase tracking-wider text-sm"
+              >
+                Reset Table
+              </button>
+              {!isAutoplayActive ? (
+                <button
+                  onClick={handleStartAutoplay}
+                  className="px-4 py-2 bg-black text-white border-2 border-black hover:bg-white hover:text-black transition-colors font-bold uppercase tracking-wider text-sm"
+                >
+                  Start Auto
+                </button>
+              ) : (
+                <button
+                  onClick={handleStopAutoplay}
+                  className="px-4 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white transition-colors font-bold uppercase tracking-wider text-sm animate-pulse"
+                >
+                  Stop Auto
+                </button>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-4 px-4 py-2 bg-muted text-muted-foreground rounded">
-            <label className="text-sm font-medium whitespace-nowrap w-24">
-              Temp: {temperature.toFixed(1)}
-            </label>
-            <div className="w-48 flex-shrink-0">
-              <Slider
-                value={[temperature]}
-                onValueChange={(values) => handleTemperatureChange(values[0])}
-                min={0}
-                max={1}
-                step={0.1}
-              />
+
+          <div className="md:col-span-4 flex flex-col border-b-2 md:border-b-0 md:border-r-2 border-black">
+            <div className="p-4 border-b-2 border-black bg-black text-white">
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Status
+              </span>
+            </div>
+            <div className="p-4 flex flex-col justify-center h-full bg-white">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold uppercase">Balance</span>
+                <span className="text-xl font-bold font-mono">${balance}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-4 flex flex-col">
+            <div className="p-4 border-b-2 border-black bg-black text-white">
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Settings
+              </span>
+            </div>
+            <div className="p-4 space-y-6 bg-white">
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold uppercase">
+                  <label>Bet Amount</label>
+                  <span>${betValue}</span>
+                </div>
+                <Slider
+                  value={[betValue]}
+                  onValueChange={(values) => handleBetChange(values[0])}
+                  min={0}
+                  max={Math.max(0, balance)}
+                  step={1}
+                  className="py-2"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold uppercase">
+                  <label>Temperature</label>
+                  <span>{temperature.toFixed(1)}</span>
+                </div>
+                <Slider
+                  value={[temperature]}
+                  onValueChange={(values) => handleTemperatureChange(values[0])}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  className="py-2"
+                />
+              </div>
             </div>
           </div>
         </div>
-        <div className="mb-6">
-          <BalanceHistoryChart />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 order-2 lg:order-1 mb-56 lg:mb-0">
+            <BlackjackTable
+              dealerCards={dealerCards}
+              playerCards={playerCards}
+              gameState={gameState}
+              currentHandIndex={currentHandIndex}
+              stoodOnHands={stoodOnHands}
+              handOutcomes={handOutcomes}
+            />
+          </div>
+          <div className="lg:col-span-1 order-1 lg:order-2">
+            <BalanceHistoryChart />
+          </div>
         </div>
-        <BlackjackTable
-          dealerCards={dealerCards}
-          playerCards={playerCards}
-          gameState={gameState}
-          currentHandIndex={currentHandIndex}
-          stoodOnHands={stoodOnHands}
-          handOutcomes={handOutcomes}
-        />
       </main>
     </div>
   );

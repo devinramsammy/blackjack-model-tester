@@ -14,7 +14,7 @@ interface BalanceStore {
 
 export const useBalanceStore = create<BalanceStore>((set, get) => ({
   balance: 1000,
-  betValue: 10,
+  betValue: 100,
   balanceHistory: [1000],
 
   getBalance: () => {

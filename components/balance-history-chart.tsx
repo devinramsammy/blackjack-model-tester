@@ -11,21 +11,16 @@ export function BalanceHistoryChart() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
   const [colors, setColors] = useState({
-    chart1: "#a855f7",
-    mutedForeground: "#6b7280",
-    muted: "#e5e7eb",
+    chart1: "#000000",
+    mutedForeground: "#000000",
+    muted: "#eeeeee",
   });
 
   useEffect(() => {
-    const root = document.documentElement;
-    const getComputedColor = (varName: string) => {
-      return getComputedStyle(root).getPropertyValue(varName).trim();
-    };
-
     setColors({
-      chart1: getComputedColor("--chart-1") || "#a855f7",
-      mutedForeground: getComputedColor("--muted-foreground") || "#6b7280",
-      muted: getComputedColor("--muted") || "#e5e7eb",
+      chart1: "#000000",
+      mutedForeground: "#000000",
+      muted: "#cccccc",
     });
   }, []);
 
@@ -51,6 +46,9 @@ export function BalanceHistoryChart() {
     () => ({
       width: width,
       height: 300,
+      legend: {
+        show: false,
+      },
       scales: {
         x: {
           time: false,
@@ -94,18 +92,22 @@ export function BalanceHistoryChart() {
 
   if (balanceHistory.length === 0) {
     return (
-      <div className="w-full p-4 bg-card rounded-lg border">
-        <h2 className="text-lg font-semibold mb-4">Balance History</h2>
-        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-          No balance history available
+      <div className="w-full p-4 bg-white border-2 border-black">
+        <h2 className="text-lg font-bold uppercase tracking-tighter mb-4 font-mono">
+          Balance History
+        </h2>
+        <div className="flex items-center justify-center h-[300px] font-mono text-sm">
+          NO DATA
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full p-4 bg-card rounded-lg border">
-      <h2 className="text-lg font-semibold mb-4">Balance History</h2>
+    <div className="w-full p-4 bg-white border-2 border-black">
+      <h2 className="text-lg font-bold uppercase tracking-tighter mb-4 font-mono">
+        Balance History
+      </h2>
       <div ref={containerRef} className="w-full">
         <UplotReact options={options} data={data} />
       </div>
