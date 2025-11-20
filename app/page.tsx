@@ -7,6 +7,7 @@ import { useBalanceStore } from "@/lib/use-balance-store";
 import { Slider } from "@/components/ui/slider";
 import { BalanceHistoryChart } from "@/components/balance-history-chart";
 import { predictAction } from "@/lib/model-utils";
+import { getAvailablePlayerMoves } from "@/lib/deck-utils";
 
 export default function Home() {
   const {
@@ -21,6 +22,9 @@ export default function Home() {
     initializeHands,
     addCardToPlayer,
     stand,
+    splitHand,
+    setBet,
+    getBet,
   } = useDeckStore();
 
   const balance = useBalanceStore((state) => state.balance);
@@ -30,6 +34,7 @@ export default function Home() {
   const [isAutoplayActive, setIsAutoplayActive] = useState(false);
   const [previousGameState, setPreviousGameState] =
     useState<typeof gameState>(gameState);
+  const [temperature, setTemperature] = useState(0.0);
 
   useEffect(() => {
     initializeDeck(1);
@@ -84,32 +89,69 @@ export default function Home() {
       return;
     }
 
-    const action = predictAction(currentHand);
+    const dealerUpcard = dealerCards.find((card) => !card.faceDown);
+    if (!dealerUpcard) {
+      return;
+    }
 
-    const executeAction = () => {
-      if (action === "HIT") {
-        addCardToPlayer(currentHandIndex);
-      } else if (action === "STAND") {
-        stand(currentHandIndex);
+    const allowedActions = getAvailablePlayerMoves(currentHand);
+
+    let cancelled = false;
+    const executePrediction = async () => {
+      try {
+        const action = await predictAction(
+          currentHand,
+          dealerUpcard,
+          allowedActions,
+          temperature
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        if (action === "HIT") {
+          addCardToPlayer(currentHandIndex);
+        } else if (action === "STAND") {
+          stand(currentHandIndex);
+        } else if (action === "DOUBLE" && allowedActions.includes("DOUBLE")) {
+          const currentBet = getBet(currentHandIndex);
+          setBet(currentHandIndex, currentBet * 2);
+
+          addCardToPlayer(currentHandIndex);
+
+          stand(currentHandIndex);
+        } else if (action === "SPLIT" && allowedActions.includes("SPLIT")) {
+          splitHand(currentHandIndex);
+        }
+      } catch (error) {
+        console.error("Error predicting action:", error);
+        if (!cancelled) {
+          addCardToPlayer(currentHandIndex);
+        }
       }
     };
 
     const timeoutId = setTimeout(() => {
-      executeAction();
+      executePrediction();
     }, 100);
 
     return () => {
+      cancelled = true;
       clearTimeout(timeoutId);
     };
   }, [
     isAutoplayActive,
     gameState,
     playerCards,
+    dealerCards,
     currentHandIndex,
     stoodOnHands,
     handOutcomes,
     addCardToPlayer,
     stand,
+    splitHand,
+    temperature,
   ]);
 
   const handleClearTable = () => {
@@ -123,6 +165,10 @@ export default function Home() {
 
   const handleBetChange = (value: number) => {
     setBetValue(value);
+  };
+
+  const handleTemperatureChange = (value: number) => {
+    setTemperature(value);
   };
 
   const handleStartAutoplay = () => {
@@ -175,6 +221,20 @@ export default function Home() {
                 min={1}
                 max={Math.min(1000, balance)}
                 step={1}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 px-4 py-2 bg-muted text-muted-foreground rounded">
+            <label className="text-sm font-medium whitespace-nowrap w-24">
+              Temp: {temperature.toFixed(1)}
+            </label>
+            <div className="w-48 flex-shrink-0">
+              <Slider
+                value={[temperature]}
+                onValueChange={(values) => handleTemperatureChange(values[0])}
+                min={0}
+                max={1}
+                step={0.1}
               />
             </div>
           </div>
