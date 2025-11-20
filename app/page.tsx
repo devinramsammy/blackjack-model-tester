@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BlackjackTable } from "@/components/blackjack-table";
 import { useDeckStore } from "@/lib/use-deck-store";
 import { useBalanceStore } from "@/lib/use-balance-store";
 import { Slider } from "@/components/ui/slider";
 import { BalanceHistoryChart } from "@/components/balance-history-chart";
+import { predictAction } from "@/lib/model-utils";
 
 export default function Home() {
   const {
@@ -18,15 +19,98 @@ export default function Home() {
     initializeDeck,
     clearCards,
     initializeHands,
+    addCardToPlayer,
+    stand,
   } = useDeckStore();
 
   const balance = useBalanceStore((state) => state.balance);
   const betValue = useBalanceStore((state) => state.betValue);
   const setBetValue = useBalanceStore((state) => state.setBetValue);
 
+  const [isAutoplayActive, setIsAutoplayActive] = useState(false);
+  const [previousGameState, setPreviousGameState] =
+    useState<typeof gameState>(gameState);
+
   useEffect(() => {
     initializeDeck(1);
   }, [initializeDeck]);
+
+  useEffect(() => {
+    if (!isAutoplayActive) {
+      setPreviousGameState(gameState);
+      return;
+    }
+
+    if (gameState === "game-over" && previousGameState !== "game-over") {
+      setTimeout(() => {
+        clearCards();
+        initializeDeck(1);
+        setTimeout(() => {
+          initializeHands();
+        }, 250);
+      }, 250);
+
+      setPreviousGameState(gameState);
+    }
+
+    setPreviousGameState(gameState);
+  }, [
+    isAutoplayActive,
+    gameState,
+    previousGameState,
+    clearCards,
+    initializeDeck,
+    initializeHands,
+  ]);
+
+  useEffect(() => {
+    if (!isAutoplayActive) {
+      return;
+    }
+
+    if (gameState !== "player-turn") {
+      return;
+    }
+
+    const currentHand = playerCards[currentHandIndex];
+    if (!currentHand || currentHand.length === 0) {
+      return;
+    }
+
+    const hasStood = stoodOnHands.has(currentHandIndex);
+    const hasOutcome = handOutcomes.has(currentHandIndex);
+
+    if (hasStood || hasOutcome) {
+      return;
+    }
+
+    const action = predictAction(currentHand);
+
+    const executeAction = () => {
+      if (action === "HIT") {
+        addCardToPlayer(currentHandIndex);
+      } else if (action === "STAND") {
+        stand(currentHandIndex);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      executeAction();
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [
+    isAutoplayActive,
+    gameState,
+    playerCards,
+    currentHandIndex,
+    stoodOnHands,
+    handOutcomes,
+    addCardToPlayer,
+    stand,
+  ]);
 
   const handleClearTable = () => {
     clearCards();
@@ -41,6 +125,17 @@ export default function Home() {
     setBetValue(value);
   };
 
+  const handleStartAutoplay = () => {
+    setIsAutoplayActive(true);
+    if (playerCards.length === 0 || playerCards[0].length === 0) {
+      handleClearTable();
+    }
+  };
+
+  const handleStopAutoplay = () => {
+    setIsAutoplayActive(false);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <main className="container mx-auto py-8 px-4">
@@ -51,6 +146,21 @@ export default function Home() {
           >
             Clear Table
           </button>
+          {!isAutoplayActive ? (
+            <button
+              onClick={handleStartAutoplay}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+            >
+              Start
+            </button>
+          ) : (
+            <button
+              onClick={handleStopAutoplay}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:bg-secondary/90"
+            >
+              Stop
+            </button>
+          )}
           <div className="px-4 py-2 bg-muted text-muted-foreground rounded">
             Balance: ${balance}
           </div>

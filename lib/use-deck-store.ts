@@ -167,12 +167,12 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           return;
         }
         dealDealer();
-      }, 300);
+      }, 100);
     };
 
     setTimeout(() => {
       dealDealer();
-    }, 300);
+    }, 100);
   };
 
   return {
@@ -291,11 +291,26 @@ export const useDeckStore = create<DeckStore>((set, get) => {
             state.playerCards.length,
             state.dealerCards
           );
+
+          const allHandsCompleted = areAllHandsCompleted(
+            completionState.handOutcomes,
+            completionState.stoodOnHands,
+            state.playerCards.length
+          );
+
           updateBalanceForOutcomes(
             completionState.handOutcomes,
             state.handOutcomes,
             state.handBets
           );
+
+          if (allHandsCompleted) {
+            return {
+              ...completionState,
+              gameState: "game-over" as GameState,
+            };
+          }
+
           return completionState;
         });
       }

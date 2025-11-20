@@ -2,7 +2,7 @@
 
 import { BlackjackCard, BlackjackCardType } from "./blackjack-card";
 import { motion, AnimatePresence } from "motion/react";
-import { useDeckStore, GameState, HandOutcome } from "@/lib/use-deck-store";
+import { GameState, HandOutcome } from "@/lib/use-deck-store";
 import { canSplitHand, calculateHandValue } from "@/lib/deck-utils";
 
 interface BlackjackTableProps {
@@ -54,8 +54,6 @@ export function BlackjackTable({
   stoodOnHands = new Set<number>(),
   handOutcomes = new Map<number, HandOutcome>(),
 }: BlackjackTableProps) {
-  const { splitHand, addCardToPlayer, stand } = useDeckStore();
-
   const dealerHandValue = calculateHandValue(dealerCards);
   const hasFaceDownCards = dealerCards.some((card) => card.faceDown);
 
@@ -161,35 +159,6 @@ export function BlackjackTable({
                       </motion.div>
                     ))}
                   </AnimatePresence>
-                </div>
-                <div className="ml-auto flex gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => addCardToPlayer(handIndex)}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={
-                      !isCurrentHand || isGameOver || hasStood || !!outcome
-                    }
-                  >
-                    Hit
-                  </button>
-                  <button
-                    onClick={() => stand(handIndex)}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={
-                      !isCurrentHand || isGameOver || hasStood || !!outcome
-                    }
-                  >
-                    Stand
-                  </button>
-                  <button
-                    onClick={() => splitHand(handIndex)}
-                    className="px-4 py-2 bg-accent text-accent-foreground rounded hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={
-                      !canSplit || !isCurrentHand || isGameOver || !!outcome
-                    }
-                  >
-                    Split
-                  </button>
                 </div>
               </div>
             </div>
