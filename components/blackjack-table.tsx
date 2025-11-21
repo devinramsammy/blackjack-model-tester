@@ -2,13 +2,12 @@
 
 import { BlackjackCard, BlackjackCardType } from "./blackjack-card";
 import { motion, AnimatePresence } from "motion/react";
-import { GameState, HandOutcome } from "@/lib/use-deck-store";
-import { canSplitHand, calculateHandValue } from "@/lib/deck-utils";
+import { HandOutcome } from "@/lib/use-deck-store";
+import { calculateHandValue } from "@/lib/deck-utils";
 
 interface BlackjackTableProps {
   dealerCards?: BlackjackCardType[];
   playerCards?: BlackjackCardType[][];
-  gameState?: GameState;
   currentHandIndex?: number;
   stoodOnHands?: Set<number>;
   handOutcomes?: Map<number, HandOutcome>;
@@ -49,7 +48,6 @@ const getOutcomeColorClasses = (outcome: HandOutcome): string => {
 export function BlackjackTable({
   dealerCards = [],
   playerCards = [[]],
-  gameState = "player-turn",
   currentHandIndex = 0,
   stoodOnHands = new Set<number>(),
   handOutcomes = new Map<number, HandOutcome>(),

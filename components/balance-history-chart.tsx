@@ -10,19 +10,11 @@ export function BalanceHistoryChart() {
   const balanceHistory = useBalanceStore((state) => state.balanceHistory);
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
-  const [colors, setColors] = useState({
+  const [colors] = useState({
     chart1: "#000000",
     mutedForeground: "#000000",
-    muted: "#eeeeee",
+    muted: "#cccccc",
   });
-
-  useEffect(() => {
-    setColors({
-      chart1: "#000000",
-      mutedForeground: "#000000",
-      muted: "#cccccc",
-    });
-  }, []);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -45,13 +37,16 @@ export function BalanceHistoryChart() {
   const options: uPlot.Options = useMemo(
     () => ({
       width: width,
-      height: 300,
+      height: 250,
       legend: {
         show: false,
       },
       scales: {
         x: {
           time: false,
+        },
+        y: {
+          range: (_u, _dataMin, dataMax) => [0, dataMax + 100],
         },
       },
       series: [
@@ -90,21 +85,8 @@ export function BalanceHistoryChart() {
     [colors, width]
   );
 
-  if (balanceHistory.length === 0) {
-    return (
-      <div className="w-full p-4 bg-white border-2 border-black">
-        <h2 className="text-lg font-bold uppercase tracking-tighter mb-4 font-mono">
-          Balance History
-        </h2>
-        <div className="flex items-center justify-center h-[300px] font-mono text-sm">
-          NO DATA
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full p-4 bg-white border-2 border-black">
+    <div className="w-full h-[326px] p-4 bg-white border-2 border-black">
       <h2 className="text-lg font-bold uppercase tracking-tighter mb-4 font-mono">
         Balance History
       </h2>

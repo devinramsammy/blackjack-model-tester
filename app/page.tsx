@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BlackjackTable } from "@/components/blackjack-table";
 import { useDeckStore } from "@/lib/use-deck-store";
 import { useBalanceStore } from "@/lib/use-balance-store";
+import { useGameStatisticsStore } from "@/lib/use-game-statistics-store";
 import { Slider } from "@/components/ui/slider";
 import { BalanceHistoryChart } from "@/components/balance-history-chart";
 import { predictAction } from "@/lib/model-utils";
@@ -25,11 +26,29 @@ export default function Home() {
     splitHand,
     setBet,
     getBet,
+    resetGameState,
   } = useDeckStore();
 
   const balance = useBalanceStore((state) => state.balance);
   const betValue = useBalanceStore((state) => state.betValue);
   const setBetValue = useBalanceStore((state) => state.setBetValue);
+  const resetBalance = useBalanceStore((state) => state.resetBalance);
+  const resetBalanceHistory = useBalanceStore(
+    (state) => state.resetBalanceHistory
+  );
+  const resetBetValue = useBalanceStore((state) => state.resetBetValue);
+  const totalIterations = useGameStatisticsStore(
+    (state) => state.totalIterations
+  );
+  const dealerWins = useGameStatisticsStore((state) => state.dealerWins);
+  const playerWins = useGameStatisticsStore((state) => state.playerWins);
+  const ties = useGameStatisticsStore((state) => state.ties);
+  const updateGameStatistics = useGameStatisticsStore(
+    (state) => state.updateGameStatistics
+  );
+  const resetGameStatistics = useGameStatisticsStore(
+    (state) => state.resetGameStatistics
+  );
 
   const [isAutoplayActive, setIsAutoplayActive] = useState(false);
   const [previousGameState, setPreviousGameState] =
@@ -38,6 +57,7 @@ export default function Home() {
 
   useEffect(() => {
     initializeDeck(1);
+    initializeHands();
   }, [initializeDeck]);
 
   useEffect(() => {
@@ -49,8 +69,17 @@ export default function Home() {
   }, [balance, betValue, setBetValue]);
 
   useEffect(() => {
+    if (gameState === "game-over" && previousGameState !== "game-over") {
+      if (handOutcomes.size > 0) {
+        updateGameStatistics(handOutcomes);
+      }
+    }
+
+    setPreviousGameState(gameState);
+  }, [gameState, previousGameState, handOutcomes, updateGameStatistics]);
+
+  useEffect(() => {
     if (!isAutoplayActive) {
-      setPreviousGameState(gameState);
       return;
     }
 
@@ -62,11 +91,7 @@ export default function Home() {
           initializeHands();
         }, 250);
       }, 250);
-
-      setPreviousGameState(gameState);
     }
-
-    setPreviousGameState(gameState);
   }, [
     isAutoplayActive,
     gameState,
@@ -162,6 +187,16 @@ export default function Home() {
     temperature,
   ]);
 
+  const reset = () => {
+    setIsAutoplayActive(false);
+    resetGameState();
+    resetBalance();
+    resetBalanceHistory();
+    resetBetValue();
+    resetGameStatistics();
+    handleClearTable();
+  };
+
   const handleClearTable = () => {
     clearCards();
     initializeDeck(1);
@@ -210,24 +245,24 @@ export default function Home() {
             </div>
             <div className="p-4 flex gap-2 flex-wrap bg-white">
               <button
-                onClick={handleClearTable}
-                className="px-4 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white transition-colors font-bold uppercase tracking-wider text-sm"
+                onClick={reset}
+                className="px-5 py-2.5 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
               >
                 Reset Table
               </button>
               {!isAutoplayActive ? (
                 <button
                   onClick={handleStartAutoplay}
-                  className="px-4 py-2 bg-black text-white border-2 border-black hover:bg-white hover:text-black transition-colors font-bold uppercase tracking-wider text-sm"
+                  className="px-5 py-2.5 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
                 >
-                  Start Auto
+                  Start Model
                 </button>
               ) : (
                 <button
                   onClick={handleStopAutoplay}
-                  className="px-4 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white transition-colors font-bold uppercase tracking-wider text-sm animate-pulse"
+                  className="px-5 py-2.5 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
                 >
-                  Stop Auto
+                  Stop Model
                 </button>
               )}
             </div>
@@ -239,10 +274,32 @@ export default function Home() {
                 Status
               </span>
             </div>
-            <div className="p-4 flex flex-col justify-center h-full bg-white">
-              <div className="flex justify-between items-center mb-2">
+            <div className="p-4 flex flex-col justify-center h-full bg-white space-y-3">
+              <div className="flex justify-between items-center">
                 <span className="text-sm font-bold uppercase">Balance</span>
                 <span className="text-xl font-bold font-mono">${balance}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold uppercase">Iterations</span>
+                <span className="text-lg font-bold font-mono">
+                  {totalIterations}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold uppercase">Player Wins</span>
+                <span className="text-lg font-bold font-mono">
+                  {playerWins}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold uppercase">Dealer Wins</span>
+                <span className="text-lg font-bold font-mono">
+                  {dealerWins}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold uppercase">Ties</span>
+                <span className="text-lg font-bold font-mono">{ties}</span>
               </div>
             </div>
           </div>
@@ -291,7 +348,6 @@ export default function Home() {
             <BlackjackTable
               dealerCards={dealerCards}
               playerCards={playerCards}
-              gameState={gameState}
               currentHandIndex={currentHandIndex}
               stoodOnHands={stoodOnHands}
               handOutcomes={handOutcomes}

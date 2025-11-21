@@ -8,8 +8,10 @@ interface BalanceStore {
   getBalanceHistory: () => number[];
   updateBalance: (amount: number) => void;
   resetBalance: (initialBalance?: number) => void;
+  resetBalanceHistory: () => void;
   setBetValue: (value: number) => void;
   getBetValue: () => number;
+  resetBetValue: () => void;
 }
 
 export const useBalanceStore = create<BalanceStore>((set, get) => ({
@@ -48,5 +50,11 @@ export const useBalanceStore = create<BalanceStore>((set, get) => ({
 
   getBetValue: () => {
     return get().betValue;
+  },
+  resetBalanceHistory: () => {
+    set({ balanceHistory: [get().balance] });
+  },
+  resetBetValue: () => {
+    set({ betValue: 100 });
   },
 }));

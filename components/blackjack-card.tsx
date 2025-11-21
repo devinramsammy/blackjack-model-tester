@@ -4,10 +4,6 @@ export interface BlackjackCardType {
   faceDown: boolean;
 }
 
-export interface CutCardType {
-  type: "cut";
-}
-
 const suiteIconMap: Record<string, string> = {
   hearts: "♥",
   diamonds: "♦",

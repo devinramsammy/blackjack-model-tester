@@ -8,27 +8,6 @@ import {
 import type { PlayerMove } from "./deck-utils";
 
 const modelConfig = {
-  categorical_features: ["dealer_upcard", "player_total", "pair_rank"],
-  passthrough_features: [
-    "has_ace",
-    "is_soft",
-    "is_pair",
-    "num_cards",
-    "can_split",
-    "can_double",
-  ],
-  action_names: ["HIT", "STAND", "DOUBLE", "SPLIT"],
-  num_classes: 4,
-  input_size: 9,
-  preprocessed_input_size: 45,
-  preprocessing_note:
-    "You must one-hot encode categorical features before passing to ONNX model",
-  class_labels: {
-    "0": "HIT",
-    "1": "STAND",
-    "2": "DOUBLE",
-    "3": "SPLIT",
-  },
   categorical_values: {
     dealer_upcard: ["10", "11", "2", "3", "4", "5", "6", "7", "8", "9"],
     player_total: [

@@ -40,7 +40,6 @@ interface DeckStore {
   initializeHands: () => void;
   splitHand: (handIndex: number) => void;
   stand: (handIndex: number) => void;
-  setCurrentHandIndex: (index: number) => void;
   resetGameState: () => void;
   setBet: (handIndex: number, bet: number) => void;
   getBet: (handIndex: number) => number;
@@ -199,16 +198,7 @@ export const useDeckStore = create<DeckStore>((set, get) => {
       let currentDeck = [...deck];
       let card = currentDeck.shift();
 
-      // skip cut cards
-      while (card && "type" in card && card.type === "cut") {
-        if (currentDeck.length === 0) {
-          set({ deck: [] });
-          return null;
-        }
-        card = currentDeck.shift();
-      }
-
-      if (!card || "type" in card) {
+      if (!card) {
         set({ deck: currentDeck });
         return null;
       }
@@ -443,10 +433,6 @@ export const useDeckStore = create<DeckStore>((set, get) => {
 
         return { playerCards: newPlayerCards, handBets: newHandBets };
       });
-    },
-
-    setCurrentHandIndex: (index: number) => {
-      set({ currentHandIndex: index });
     },
 
     stand: (handIndex: number) => {

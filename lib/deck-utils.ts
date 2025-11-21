@@ -1,8 +1,8 @@
 import { CARD_VALUES, CARD_SUITES } from "./constants";
-import { BlackjackCardType, CutCardType } from "@/components/blackjack-card";
+import { BlackjackCardType } from "@/components/blackjack-card";
 import type { HandOutcome } from "./use-deck-store";
 
-export type DeckCard = BlackjackCardType | CutCardType;
+export type DeckCard = BlackjackCardType;
 
 export type PlayerMove = "HIT" | "STAND" | "DOUBLE" | "SPLIT";
 
@@ -25,17 +25,6 @@ export function createDeck(deckCount: number): DeckCard[] {
     const j = Math.floor(Math.random() * (i + 1));
     [cards[i], cards[j]] = [cards[j], cards[i]];
   }
-
-  const deckLength = cards.length;
-  const back25PercentStart = Math.floor(deckLength * 0.75);
-  const back25PercentEnd = deckLength - 1;
-
-  const cutCardPosition = Math.floor(
-    Math.random() * (back25PercentEnd - back25PercentStart + 1) +
-      back25PercentStart
-  );
-
-  cards.splice(cutCardPosition, 0, { type: "cut" });
 
   return cards;
 }
@@ -65,10 +54,6 @@ export function calculateHandValue(hand: BlackjackCardType[]): number {
   }
 
   return value;
-}
-
-export function isNatural21(hand: BlackjackCardType[]): boolean {
-  return calculateHandValue(hand) === 21;
 }
 
 export function isBust(hand: BlackjackCardType[]): boolean {
