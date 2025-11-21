@@ -191,7 +191,6 @@ describe("useGameStatisticsStore", () => {
 
       const state = useGameStatisticsStore.getState();
       expect(state.totalIterations).toBe(1);
-      // When wins are equal, the logic defaults to player (line 55-56 in implementation)
       expect(state.playerWins).toBe(1);
       expect(state.dealerWins).toBe(0);
       expect(state.ties).toBe(0);

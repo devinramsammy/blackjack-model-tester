@@ -216,10 +216,17 @@ export default function Home() {
   };
 
   const handleStartAutoplay = () => {
-    setIsAutoplayActive(true);
-    if (playerCards.length === 0 || playerCards[0].length === 0) {
+    const needsReset =
+      gameState === "game-over" ||
+      gameState === "dealer-turn" ||
+      playerCards.length === 0 ||
+      playerCards[0].length === 0;
+
+    if (needsReset) {
       handleClearTable();
     }
+
+    setIsAutoplayActive(true);
   };
 
   const handleStopAutoplay = () => {
