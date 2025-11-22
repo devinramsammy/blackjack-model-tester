@@ -257,7 +257,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-2 border-black mb-4">
           <div className="col-span-1 md:col-span-12 border-b-2 border-black p-4 bg-white">
             <h1 className="text-xl font-black uppercase tracking-tighter flex justify-between items-center">
-              <span>Blackjack Model Tester</span>
+              <span>Blackjack Sim</span>
               <a
                 href="https://x.com/devindevdevin"
                 target="_blank"
