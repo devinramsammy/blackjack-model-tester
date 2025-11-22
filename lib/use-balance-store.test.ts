@@ -73,20 +73,20 @@ describe("useBalanceStore", () => {
       expect(finalState.getBalanceHistory()).toEqual([1000, 1050, 1025, 1125]);
     });
 
-    it("should allow balance to go negative", () => {
+    it("should prevent balance from going below 0", () => {
       useBalanceStore.getState().updateBalance(-1500);
       const state = useBalanceStore.getState();
-      expect(state.getBalance()).toBe(-500);
-      expect(state.getBalanceHistory()).toContain(-500);
+      expect(state.getBalance()).toBe(0);
+      expect(state.getBalanceHistory()).toContain(0);
     });
   });
 
   describe("resetBalance", () => {
-    it("should reset balance to default 1000 when no parameter provided", () => {
+    it("should reset balance to default 5000 when no parameter provided", () => {
       useBalanceStore.getState().updateBalance(500);
       useBalanceStore.getState().resetBalance();
       const state = useBalanceStore.getState();
-      expect(state.getBalance()).toBe(1000);
+      expect(state.getBalance()).toBe(5000);
     });
 
     it("should reset balance to provided initialBalance", () => {
@@ -109,7 +109,7 @@ describe("useBalanceStore", () => {
       useBalanceStore.getState().updateBalance(100);
       useBalanceStore.getState().resetBalance();
       const state = useBalanceStore.getState();
-      expect(state.getBalanceHistory()).toEqual([1000]);
+      expect(state.getBalanceHistory()).toEqual([5000]);
     });
   });
 

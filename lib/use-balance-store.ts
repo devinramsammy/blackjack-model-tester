@@ -15,9 +15,9 @@ interface BalanceStore {
 }
 
 export const useBalanceStore = create<BalanceStore>((set, get) => ({
-  balance: 1000,
-  betValue: 100,
-  balanceHistory: [1000],
+  balance: 5000,
+  betValue: 250,
+  balanceHistory: [5000],
 
   getBalance: () => {
     return get().balance;
@@ -29,7 +29,7 @@ export const useBalanceStore = create<BalanceStore>((set, get) => ({
 
   updateBalance: (amount: number) => {
     set((state) => {
-      const newBalance = state.balance + amount;
+      const newBalance = Math.max(0, state.balance + amount);
       return {
         balance: newBalance,
         balanceHistory: [...state.balanceHistory, newBalance],
@@ -37,7 +37,7 @@ export const useBalanceStore = create<BalanceStore>((set, get) => ({
     });
   },
 
-  resetBalance: (initialBalance = 1000) => {
+  resetBalance: (initialBalance = 5000) => {
     set({
       balance: initialBalance,
       balanceHistory: [initialBalance],
@@ -55,6 +55,6 @@ export const useBalanceStore = create<BalanceStore>((set, get) => ({
     set({ balanceHistory: [get().balance] });
   },
   resetBetValue: () => {
-    set({ betValue: 100 });
+    set({ betValue: 250 });
   },
 }));

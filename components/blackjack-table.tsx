@@ -127,7 +127,7 @@ export function BlackjackTable({
                 )}
                 {outcome && (
                   <div
-                    className={`text-xs font-bold mt-2 uppercase w-fit ${getOutcomeColorClasses(
+                    className={`text-xs font-bold mt-2 uppercase w-fit whitespace-nowrap ${getOutcomeColorClasses(
                       outcome
                     )}`}
                   >

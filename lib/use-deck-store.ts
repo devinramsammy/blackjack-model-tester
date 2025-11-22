@@ -33,6 +33,8 @@ interface DeckStore {
   stoodOnHands: Set<number>;
   handOutcomes: Map<number, HandOutcome>;
   handBets: Map<number, number>;
+  speedMultiplier: number;
+  setSpeedMultiplier: (multiplier: number) => void;
   initializeDeck: (deckCount?: number) => void;
   getCard: () => BlackjackCardType | null;
   addCardToPlayer: (handIndex: number) => void;
@@ -142,6 +144,7 @@ export const useDeckStore = create<DeckStore>((set, get) => {
         dealerCards: [...state.dealerCards, { ...card, faceDown: false }],
       }));
 
+      const { speedMultiplier } = get();
       setTimeout(() => {
         const { dealerCards: updatedCards } = get();
         const dealerCondition = checkDealerCondition(updatedCards);
@@ -166,12 +169,13 @@ export const useDeckStore = create<DeckStore>((set, get) => {
           return;
         }
         dealDealer();
-      }, 100);
+      }, 100 / speedMultiplier);
     };
 
+    const { speedMultiplier } = get();
     setTimeout(() => {
       dealDealer();
-    }, 100);
+    }, 100 / speedMultiplier);
   };
 
   return {
@@ -183,6 +187,10 @@ export const useDeckStore = create<DeckStore>((set, get) => {
     stoodOnHands: new Set<number>(),
     handOutcomes: new Map<number, HandOutcome>(),
     handBets: new Map<number, number>(),
+    speedMultiplier: 5.0,
+    setSpeedMultiplier: (multiplier: number) => {
+      set({ speedMultiplier: multiplier });
+    },
 
     initializeDeck: (deckCount = 1) => {
       const newDeck = createDeck(deckCount);

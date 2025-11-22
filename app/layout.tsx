@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "shadcn nextjs app",
-  description: "minimal shadcn nextjs app",
+  title: "Blackjack Model Tester",
+  description:
+    "Test and evaluate blackjack AI model with interactive gameplay and statistics",
 };
 
 export default function RootLayout({

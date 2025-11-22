@@ -27,6 +27,8 @@ export default function Home() {
     setBet,
     getBet,
     resetGameState,
+    speedMultiplier,
+    setSpeedMultiplier,
   } = useDeckStore();
 
   const balance = useBalanceStore((state) => state.balance);
@@ -69,6 +71,12 @@ export default function Home() {
   }, [balance, betValue, setBetValue]);
 
   useEffect(() => {
+    if (balance === 0 && isAutoplayActive) {
+      setIsAutoplayActive(false);
+    }
+  }, [balance, isAutoplayActive]);
+
+  useEffect(() => {
     if (gameState === "game-over" && previousGameState !== "game-over") {
       if (handOutcomes.size > 0) {
         updateGameStatistics(handOutcomes);
@@ -89,8 +97,8 @@ export default function Home() {
         initializeDeck(1);
         setTimeout(() => {
           initializeHands();
-        }, 250);
-      }, 250);
+        }, 250 / speedMultiplier);
+      }, 250 / speedMultiplier);
     }
   }, [
     isAutoplayActive,
@@ -99,6 +107,7 @@ export default function Home() {
     clearCards,
     initializeDeck,
     initializeHands,
+    speedMultiplier,
   ]);
 
   useEffect(() => {
@@ -167,7 +176,7 @@ export default function Home() {
 
     const timeoutId = setTimeout(() => {
       executePrediction();
-    }, 100);
+    }, 100 / speedMultiplier);
 
     return () => {
       cancelled = true;
@@ -185,6 +194,7 @@ export default function Home() {
     stand,
     splitHand,
     temperature,
+    speedMultiplier,
   ]);
 
   const reset = () => {
@@ -203,7 +213,7 @@ export default function Home() {
 
     setTimeout(() => {
       initializeHands();
-    }, 250);
+    }, 250 / speedMultiplier);
   };
 
   const handleBetChange = (value: number) => {
@@ -215,7 +225,15 @@ export default function Home() {
     setTemperature(value);
   };
 
+  const handleSpeedMultiplierChange = (value: number) => {
+    setSpeedMultiplier(value);
+  };
+
   const handleStartAutoplay = () => {
+    if (balance === 0) {
+      return;
+    }
+
     const needsReset =
       gameState === "game-over" ||
       gameState === "dealer-turn" ||
@@ -234,16 +252,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black font-mono p-4 md:p-8">
+    <div className="min-h-screen bg-white text-black font-mono p-2 md:p-4">
       <main className="max-w-7xl mx-auto">
-        <h1 className="text-4xl md:text-6xl font-black mb-8 uppercase tracking-tighter leading-none border-b-4 border-black pb-4">
-          Blackjack
-          <span className="block text-xl md:text-2xl font-normal mt-2 tracking-normal">
-            Model Tester
-          </span>
-        </h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-2 border-black mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-2 border-black mb-4">
+          <div className="col-span-1 md:col-span-12 border-b-2 border-black p-4 bg-white">
+            <h1 className="text-xl font-black uppercase tracking-tighter">
+              Blackjack Model Tester
+            </h1>
+          </div>
           <div className="md:col-span-4 flex flex-col border-b-2 md:border-b-0 md:border-r-2 border-black">
             <div className="p-4 border-b-2 border-black bg-black text-white">
               <span className="text-xs font-bold uppercase tracking-wider">
@@ -346,12 +362,28 @@ export default function Home() {
                   className="py-2"
                 />
               </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold uppercase">
+                  <label>Speed Multiplier</label>
+                  <span>{speedMultiplier.toFixed(1)}x</span>
+                </div>
+                <Slider
+                  value={[speedMultiplier]}
+                  onValueChange={(values) =>
+                    handleSpeedMultiplierChange(values[0])
+                  }
+                  min={0.1}
+                  max={20}
+                  step={0.1}
+                  className="py-2"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 order-2 lg:order-1 mb-56 lg:mb-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 order-2 lg:order-1 mb-8 lg:mb-0">
             <BlackjackTable
               dealerCards={dealerCards}
               playerCards={playerCards}
