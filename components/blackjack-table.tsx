@@ -132,20 +132,27 @@ export function BlackjackTable({
                   </div>
                 </div>
                 <div className="p-4 flex-1 bg-white flex flex-col justify-start gap-2">
-                  {hasStood && !outcome && (
-                    <div className="text-xs uppercase border border-current px-1 w-fit text-black border-black">
-                      Stood
-                    </div>
-                  )}
-                  {outcome && (
-                    <div
-                      className={`text-xs font-bold uppercase w-fit whitespace-nowrap ${getOutcomeColorClasses(
-                        outcome
-                      )}`}
-                    >
-                      {getOutcomeMessage(outcome)}
-                    </div>
-                  )}
+                  <>
+                    {hasStood && !outcome && (
+                      <div className="text-xs uppercase border border-current px-1 w-fit text-black border-black">
+                        Stood
+                      </div>
+                    )}
+                    {outcome && (
+                      <div
+                        className={`text-xs font-bold uppercase w-fit whitespace-nowrap ${getOutcomeColorClasses(
+                          outcome
+                        )}`}
+                      >
+                        {getOutcomeMessage(outcome)}
+                      </div>
+                    )}
+                    {!hasStood && !outcome && (
+                      <div className="text-xs uppercase border border-current px-1 w-fit text-black border-black opacity-0">
+                        &nbsp;
+                      </div>
+                    )}
+                  </>
                 </div>
               </div>
               <div className="flex-1 p-4 min-h-[10rem] flex items-center gap-4 bg-white">
