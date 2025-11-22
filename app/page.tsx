@@ -256,8 +256,16 @@ export default function Home() {
       <main className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-2 border-black mb-4">
           <div className="col-span-1 md:col-span-12 border-b-2 border-black p-4 bg-white">
-            <h1 className="text-xl font-black uppercase tracking-tighter">
-              Blackjack Model Tester
+            <h1 className="text-xl font-black uppercase tracking-tighter flex justify-between items-center">
+              <span>Blackjack Model Tester</span>
+              <a
+                href="https://x.com/devindevdevin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-normal normal-case hover:underline"
+              >
+                @devindevdevin
+              </a>
             </h1>
           </div>
           <div className="md:col-span-4 flex flex-col border-b-2 md:border-b-0 md:border-r-2 border-black">
@@ -390,6 +398,7 @@ export default function Home() {
               currentHandIndex={currentHandIndex}
               stoodOnHands={stoodOnHands}
               handOutcomes={handOutcomes}
+              speedMultiplier={speedMultiplier}
             />
           </div>
           <div className="lg:col-span-1 order-1 lg:order-2">

@@ -11,7 +11,16 @@ const suiteIconMap: Record<string, string> = {
   spades: "♠",
 };
 
-export function BlackjackCard({ value, suite, faceDown }: BlackjackCardType) {
+interface BlackjackCardProps extends BlackjackCardType {
+  speedMultiplier?: number;
+}
+
+export function BlackjackCard({
+  value,
+  suite,
+  faceDown,
+  speedMultiplier = 1,
+}: BlackjackCardProps) {
   const suiteIcon = suiteIconMap[suite.toLowerCase()] || suite;
 
   return (
@@ -21,7 +30,7 @@ export function BlackjackCard({ value, suite, faceDown }: BlackjackCardType) {
         style={{
           transformStyle: "preserve-3d",
           transform: faceDown ? "rotateY(180deg)" : "rotateY(0deg)",
-          transitionDuration: "0.4s",
+          transitionDuration: `${0.4 / speedMultiplier}s`,
           transitionTimingFunction: "ease-in-out",
         }}
       >

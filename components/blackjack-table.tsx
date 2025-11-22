@@ -11,6 +11,7 @@ interface BlackjackTableProps {
   currentHandIndex?: number;
   stoodOnHands?: Set<number>;
   handOutcomes?: Map<number, HandOutcome>;
+  speedMultiplier?: number;
 }
 
 const getOutcomeMessage = (outcome: HandOutcome): string => {
@@ -51,6 +52,7 @@ export function BlackjackTable({
   currentHandIndex = 0,
   stoodOnHands = new Set<number>(),
   handOutcomes = new Map<number, HandOutcome>(),
+  speedMultiplier = 1,
 }: BlackjackTableProps) {
   const dealerHandValue = calculateHandValue(dealerCards);
   const hasFaceDownCards = dealerCards.some((card) => card.faceDown);
@@ -83,6 +85,7 @@ export function BlackjackTable({
                     value={card.value}
                     suite={card.suite}
                     faceDown={card.faceDown}
+                    speedMultiplier={speedMultiplier}
                   />
                 </motion.div>
               ))}
