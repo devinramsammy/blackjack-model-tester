@@ -59,16 +59,20 @@ export function BlackjackTable({
 
   return (
     <div className="flex flex-col gap-0 border-2 border-black">
-      <div className="flex flex-col md:flex-row items-start border-b-2 border-black">
-        <div className="w-full md:w-32 p-4 border-b-2 md:border-b-0 md:border-r-2 border-black bg-black text-white">
-          <div className="text-lg font-bold uppercase tracking-tighter">
-            Dealer
-          </div>
-          {dealerCards.length > 0 && (
-            <div className="text-sm font-mono mt-2">
-              TOTAL: {hasFaceDownCards ? "?" : dealerHandValue}
+      <div className="flex flex-col md:flex-row items-stretch border-b-2 border-black">
+        <div className="w-full md:w-32 border-b-2 md:border-b-0 border-black flex flex-col bg-white">
+          <div className="h-24 min-h-24 max-h-24 p-4 bg-black text-white flex flex-col justify-start gap-1 overflow-hidden flex-shrink-0">
+            <div className="text-lg font-bold uppercase tracking-tighter flex-shrink-0">
+              Dealer
             </div>
-          )}
+            <div className="text-sm font-mono flex-shrink-0">
+              TOTAL:{" "}
+              {dealerCards.length > 0 && !hasFaceDownCards
+                ? dealerHandValue
+                : "?"}
+            </div>
+          </div>
+          <div className="flex-1 bg-white" />
         </div>
         <div className="flex-1 p-4 min-h-[10rem] bg-white">
           <div className="flex gap-4 flex-wrap">
@@ -104,39 +108,45 @@ export function BlackjackTable({
           return (
             <div
               key={handIndex}
-              className={`flex flex-col md:flex-row items-start ${
+              className={`flex flex-col md:flex-row items-stretch ${
                 handIndex !== playerCards.length - 1
                   ? "border-b-2 border-black"
                   : ""
               }`}
             >
-              <div
-                className={`w-full md:w-32 p-4 border-b-2 md:border-b-0 md:border-r-2 border-black transition-colors ${
-                  isCurrentHand ? "bg-black text-white" : "bg-white text-black"
-                }`}
-              >
-                <div className="text-lg font-bold uppercase tracking-tighter">
-                  {playerCards.length > 1 ? `Hand ${handIndex + 1}` : "Player"}
+              <div className="w-full md:w-32 border-b-2 md:border-b-0 border-black flex flex-col bg-white">
+                <div
+                  className={`h-24 min-h-24 max-h-24 p-4 transition-colors flex flex-col justify-start gap-1 overflow-hidden flex-shrink-0 ${
+                    isCurrentHand
+                      ? "bg-black text-white"
+                      : "bg-white text-black"
+                  }`}
+                >
+                  <div className="text-lg font-bold uppercase tracking-tighter flex-shrink-0">
+                    {playerCards.length > 1
+                      ? `Hand ${handIndex + 1}`
+                      : "Player"}
+                  </div>
+                  <div className="text-sm font-mono flex-shrink-0">
+                    TOTAL: {hand.length > 0 ? handValue : "?"}
+                  </div>
                 </div>
-                {hand.length > 0 && (
-                  <div className="text-sm font-mono mt-2">
-                    TOTAL: {handValue}
-                  </div>
-                )}
-                {hasStood && !outcome && (
-                  <div className="text-xs uppercase border border-current px-1 mt-2 w-fit">
-                    Stood
-                  </div>
-                )}
-                {outcome && (
-                  <div
-                    className={`text-xs font-bold mt-2 uppercase w-fit whitespace-nowrap ${getOutcomeColorClasses(
-                      outcome
-                    )}`}
-                  >
-                    {getOutcomeMessage(outcome)}
-                  </div>
-                )}
+                <div className="p-4 flex-1 bg-white flex flex-col justify-start gap-2">
+                  {hasStood && !outcome && (
+                    <div className="text-xs uppercase border border-current px-1 w-fit text-black border-black">
+                      Stood
+                    </div>
+                  )}
+                  {outcome && (
+                    <div
+                      className={`text-xs font-bold uppercase w-fit whitespace-nowrap ${getOutcomeColorClasses(
+                        outcome
+                      )}`}
+                    >
+                      {getOutcomeMessage(outcome)}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex-1 p-4 min-h-[10rem] flex items-center gap-4 bg-white">
                 <div className="flex gap-4 flex-wrap">
