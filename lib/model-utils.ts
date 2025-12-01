@@ -163,30 +163,60 @@ export function preprocessFeatures(features: GameStateFeatures): Float32Array {
   return new Float32Array(allFeatures);
 }
 
-let modelSession: ort.InferenceSession | null = null;
-let modelLoadingPromise: Promise<ort.InferenceSession> | null = null;
+class ModelSingleton {
+  private static instance: ort.InferenceSession | null = null;
+  private static loadingPromise: Promise<ort.InferenceSession> | null = null;
+  private static executionQueue: Promise<void | ort.InferenceSession.ReturnType> =
+    Promise.resolve();
+
+  public static async getInstance(): Promise<ort.InferenceSession> {
+    if (this.instance) {
+      return this.instance;
+    }
+
+    if (this.loadingPromise) {
+      return this.loadingPromise;
+    }
+
+    this.loadingPromise = (async () => {
+      const modelPath = "/model.onnx";
+      ort.env.logLevel = "error";
+      try {
+        const session = await ort.InferenceSession.create(modelPath, {
+          executionProviders: ["wasm"],
+        });
+        this.instance = session;
+        return session;
+      } catch (error) {
+        console.error("Failed to load model:", error);
+        throw error;
+      } finally {
+        this.loadingPromise = null;
+      }
+    })();
+
+    return this.loadingPromise;
+  }
+
+  public static async run(
+    session: ort.InferenceSession,
+    feeds: ort.InferenceSession.OnnxValueMapType,
+    options?: ort.InferenceSession.RunOptions
+  ): Promise<ort.InferenceSession.ReturnType> {
+    const currentExecution = this.executionQueue.then(() =>
+      session.run(feeds, options)
+    );
+
+    this.executionQueue = currentExecution.catch((err) => {
+      console.error("Error running model:", err);
+    });
+
+    return currentExecution;
+  }
+}
 
 export async function loadModel(): Promise<ort.InferenceSession> {
-  if (modelSession) {
-    return modelSession;
-  }
-
-  if (modelLoadingPromise) {
-    return modelLoadingPromise;
-  }
-
-  modelLoadingPromise = (async () => {
-    const modelPath = "/model.onnx";
-    ort.env.logLevel = "error";
-    const session = await ort.InferenceSession.create(modelPath, {
-      executionProviders: ["wasm"],
-    });
-    modelSession = session;
-    modelLoadingPromise = null;
-    return session;
-  })();
-
-  return modelLoadingPromise;
+  return ModelSingleton.getInstance();
 }
 
 export async function predictActionWithModel(
@@ -202,7 +232,7 @@ export async function predictActionWithModel(
     throw new Error("Model has no input names");
   }
   const inputName = inputNames[0];
-  const results = await session.run({ [inputName]: tensor });
+  const results = await ModelSingleton.run(session, { [inputName]: tensor });
   const outputNames = session.outputNames;
   const resultKeys = Object.keys(results);
   let probabilities: ort.Tensor | null = null;

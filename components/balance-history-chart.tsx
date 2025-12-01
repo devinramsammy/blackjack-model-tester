@@ -79,6 +79,7 @@ export function BalanceHistoryChart() {
             width: 1,
           },
           side: 1,
+          gap: -2,
         },
       ],
     }),

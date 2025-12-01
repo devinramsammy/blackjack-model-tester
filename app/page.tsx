@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Header } from "@/components/header";
+import { useEffect, useState, useRef } from "react";
 import { BlackjackTable } from "@/components/blackjack-table";
 import { useDeckStore } from "@/lib/use-deck-store";
 import { useBalanceStore } from "@/lib/use-balance-store";
@@ -56,6 +57,8 @@ export default function Home() {
   const [previousGameState, setPreviousGameState] =
     useState<typeof gameState>(gameState);
   const [temperature, setTemperature] = useState(0.0);
+  const [modelSuggestion, setModelSuggestion] = useState<string | null>(null);
+  const lastActionRef = useRef<Map<number, string>>(new Map());
 
   useEffect(() => {
     initializeDeck(1);
@@ -111,14 +114,6 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    if (!isAutoplayActive) {
-      return;
-    }
-
-    if (gameState !== "player-turn") {
-      return;
-    }
-
     const currentHand = playerCards[currentHandIndex];
     if (!currentHand || currentHand.length === 0) {
       return;
@@ -128,6 +123,10 @@ export default function Home() {
     const hasOutcome = handOutcomes.has(currentHandIndex);
 
     if (hasStood || hasOutcome) {
+      const lastAction = lastActionRef.current.get(currentHandIndex);
+      if (lastAction) {
+        setModelSuggestion(lastAction);
+      }
       return;
     }
 
@@ -139,7 +138,7 @@ export default function Home() {
     const allowedActions = getAvailablePlayerMoves(currentHand);
 
     let cancelled = false;
-    const executePrediction = async () => {
+    const runPrediction = async () => {
       try {
         const action = await predictAction(
           currentHand,
@@ -152,31 +151,44 @@ export default function Home() {
           return;
         }
 
-        if (action === "HIT") {
-          addCardToPlayer(currentHandIndex);
-        } else if (action === "STAND") {
-          stand(currentHandIndex);
-        } else if (action === "DOUBLE" && allowedActions.includes("DOUBLE")) {
-          const currentBet = getBet(currentHandIndex);
-          setBet(currentHandIndex, currentBet * 2);
+        lastActionRef.current.set(currentHandIndex, action);
+        setModelSuggestion(action);
 
-          addCardToPlayer(currentHandIndex);
+        if (isAutoplayActive) {
+          requestAnimationFrame(() => {
+            if (cancelled) return;
 
-          stand(currentHandIndex);
-        } else if (action === "SPLIT" && allowedActions.includes("SPLIT")) {
-          splitHand(currentHandIndex);
+            if (action === "HIT") {
+              addCardToPlayer(currentHandIndex);
+            } else if (action === "STAND") {
+              stand(currentHandIndex);
+            } else if (
+              action === "DOUBLE" &&
+              allowedActions.includes("DOUBLE")
+            ) {
+              const currentBet = getBet(currentHandIndex);
+              setBet(currentHandIndex, currentBet * 2);
+
+              addCardToPlayer(currentHandIndex);
+
+              stand(currentHandIndex);
+            } else if (action === "SPLIT" && allowedActions.includes("SPLIT")) {
+              splitHand(currentHandIndex);
+            }
+          });
         }
       } catch (error) {
         console.error("Error predicting action:", error);
-        if (!cancelled) {
+        if (isAutoplayActive && !cancelled) {
           addCardToPlayer(currentHandIndex);
         }
       }
     };
 
+    const delay = isAutoplayActive ? 100 / speedMultiplier : 0;
     const timeoutId = setTimeout(() => {
-      executePrediction();
-    }, 100 / speedMultiplier);
+      runPrediction();
+    }, delay);
 
     return () => {
       cancelled = true;
@@ -193,6 +205,8 @@ export default function Home() {
     addCardToPlayer,
     stand,
     splitHand,
+    setBet,
+    getBet,
     temperature,
     speedMultiplier,
   ]);
@@ -255,47 +269,43 @@ export default function Home() {
     <div className="min-h-screen bg-white text-black font-mono p-2 md:p-4">
       <main className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-2 border-black mb-4">
-          <div className="col-span-1 md:col-span-12 border-b-2 border-black p-4 bg-white">
-            <h1 className="text-xl font-black uppercase tracking-tighter flex justify-between items-center">
-              <span>Blackjack Sim</span>
-              <a
-                href="https://x.com/devindevdevin"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-normal normal-case hover:underline"
-              >
-                @devindevdevin
-              </a>
-            </h1>
-          </div>
+          <Header />
           <div className="md:col-span-4 flex flex-col border-b-2 md:border-b-0 md:border-r-2 border-black">
             <div className="p-4 border-b-2 border-black bg-black text-white">
               <span className="text-xs font-bold uppercase tracking-wider">
                 Game Control
               </span>
             </div>
-            <div className="p-4 flex gap-2 flex-wrap bg-white">
-              <button
-                onClick={reset}
-                className="px-5 py-2.5 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
-              >
-                Reset Table
-              </button>
+            <div className="p-4 flex flex-col gap-4 bg-white min-h-[100px]">
               {!isAutoplayActive ? (
                 <button
                   onClick={handleStartAutoplay}
-                  className="px-5 py-2.5 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
+                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
                 >
                   Start Model
                 </button>
               ) : (
                 <button
                   onClick={handleStopAutoplay}
-                  className="px-5 py-2.5 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
+                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white focus:outline-none font-bold uppercase tracking-wider text-sm"
                 >
                   Stop Model
                 </button>
               )}
+              <button
+                onClick={reset}
+                className="w-full px-2 py-2 bg-black text-white border-2 border-black hover:bg-white hover:text-black focus:outline-none font-bold uppercase tracking-wider text-sm"
+              >
+                Reset Game
+              </button>
+            </div>
+            <div className="border-t-2 border-black p-4 bg-gray-50">
+              <div className="text-xs font-bold uppercase mb-1">
+                Model Prediction:
+              </div>
+              <div className="font-mono font-bold text-lg">
+                {modelSuggestion || "\u00A0"}
+              </div>
             </div>
           </div>
 
