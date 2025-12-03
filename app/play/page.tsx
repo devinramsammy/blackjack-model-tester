@@ -166,32 +166,32 @@ export default function PlayPage() {
               </span>
             </div>
             <div className="p-4 flex flex-col gap-4 bg-white min-h-[100px]">
-              <div className="grid grid-cols-4 gap-2 w-full">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 w-full">
                 <button
                   onClick={handleHit}
                   disabled={!allowedActions.includes("HIT")}
-                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs md:text-sm"
+                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs"
                 >
                   Hit
                 </button>
                 <button
                   onClick={handleStand}
                   disabled={!allowedActions.includes("STAND")}
-                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs md:text-sm"
+                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs"
                 >
                   Stand
                 </button>
                 <button
                   onClick={handleDouble}
                   disabled={!allowedActions.includes("DOUBLE")}
-                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs md:text-sm"
+                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs"
                 >
                   Double
                 </button>
                 <button
                   onClick={handleSplit}
                   disabled={!allowedActions.includes("SPLIT")}
-                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs md:text-sm"
+                  className="w-full px-2 py-2 bg-white text-black border-2 border-black hover:bg-black hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black font-bold uppercase tracking-wider text-xs"
                 >
                   Split
                 </button>
