@@ -130,9 +130,24 @@ export default function PlayPage() {
     }, 100);
   };
 
+  const hasCardsDealt = playerCards[0]?.length > 0;
+  const isFirstMovePlayed =
+    playerCards.length > 1 ||
+    (playerCards[0] && playerCards[0].length > 2) ||
+    stoodOnHands.size > 0;
+
+  const canModifyBet =
+    gameState === "game-over" ||
+    !hasCardsDealt ||
+    (!isFirstMovePlayed && gameState === "player-turn");
+
   const handleBetChange = (value: number) => {
     const clampedValue = Math.max(0, Math.min(value, balance));
     setBetValue(clampedValue);
+
+    if (gameState === "player-turn" && hasCardsDealt && !isFirstMovePlayed) {
+      setBet(0, clampedValue);
+    }
   };
 
   const currentHand = playerCards[currentHandIndex] || [];
@@ -309,9 +324,7 @@ export default function PlayPage() {
                   min={0}
                   max={Math.max(0, balance)}
                   step={1}
-                  disabled={
-                    gameState !== "game-over" && playerCards[0]?.length > 0
-                  }
+                  disabled={!canModifyBet}
                   className="py-2"
                 />
               </div>
